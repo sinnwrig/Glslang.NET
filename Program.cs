@@ -9,19 +9,19 @@ public class Program
     {
         using (ShaderCompiler compiler = new ShaderCompiler())
         {         
-            ShaderInput input = new()
+            ShaderInput vertInput = new()
             {
-                language = ShaderSource.GLSL,
+                language = ShaderSource.HLSL,
                 stage = ShaderStage.Vertex,
                 client = ShaderClient.Vulkan,
                 clientVersion = ClientVersion.Vulkan_1_2,
                 targetLanguage = TargetLanguage.SpirV,
                 targetLanguageVersion = TargetLanguageVersion.SpirV_1_5,
-                code = ShaderCode.VertexCodeGlsl,
-                defaultVersion = 100,
+                code = ShaderCode.VertexCodeHlsl,
+                defaultVersion = 450,
                 defaultProfile = ShaderProfile.None,
-                forceDefaultVersionAndProfile = 0,
-                forwardCompatible = 0,
+                forceDefaultVersionAndProfile = false,
+                forwardCompatible = false,
                 messages = Messages.Default,
                 resource = ShaderResource.DefaultResource,
                 includeCallbacks = new()
@@ -31,20 +31,36 @@ public class Program
                 }
             };
 
-            GlslangShader shader = compiler.CreateShader(input);
+            GlslangShader vertexShader = compiler.CreateShader(vertInput);
 
-            if (!shader.Preprocess(out string info, out string debugInfo))	
+            if (!vertexShader.Preprocess(out string info, out string debugInfo))
             {
-                Console.WriteLine($"GLSL preprocessing failed:\n{info}");
+                Console.WriteLine($"Vertex shader preprocessing failed:\n{info}");
+                return;
             }
 
-            if (!shader.Parse(out info, out debugInfo)) 
+            if (!vertexShader.Parse(out info, out debugInfo)) 
             {
-                Console.WriteLine($"GLSL parsing failed\n{info}Preprocessed Code:{shader.GetPreprocessedCode()}");
+                Console.WriteLine($"Vertex shader parsing failed\n{info}Preprocessed Code:{vertexShader.GetPreprocessedCode()}");
+                return;
             }
 
 
-            GlslangProgram program = compiler.CreateProgram();
+            GlslangProgram program = compiler.CreateProgram(vertexShader);
+
+            if (!program.Link(out info, out debugInfo, Messages.SpvRules | Messages.VulkanRules))
+            {
+                Console.WriteLine($"Shader linking failed\n{info}Debug info:{debugInfo}");
+                return;
+            }
+
+            uint[] spirv = program.GenerateSpirV(ShaderStage.Vertex, out string spirVMessages);
+            Console.WriteLine($"Vertex Spir-V Messages: {spirVMessages}\n\n");
+
+            Console.WriteLine($"Spv length: {spirv.Length}");
+
+            string disassembled = compiler.DisassembleSpirVBinary(spirv);
+            Console.WriteLine($"Disassembled vertex bytecode:\n{disassembled}");
         }
     }
 

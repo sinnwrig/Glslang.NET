@@ -67,11 +67,43 @@ public class ShaderCompiler : IDisposable
     }
 
 
-    [DllImport(libraryPath, CallingConvention = CallingConvention.Cdecl)] private static extern IntPtr GlslangProgramCreate();
-    [DllImport(libraryPath, CallingConvention = CallingConvention.Cdecl)] private static extern void GlslangProgramDelete(IntPtr program);
+    [DllImport(libraryPath, CallingConvention = CallingConvention.Cdecl)] 
+    private static extern IntPtr GlslangCreateProgram();
+
+    public GlslangProgram CreateProgram(params GlslangShader[] shaders) 
+    {
+        Console.WriteLine($"Creating program...");
+        IntPtr shaderPtr = GlslangCreateProgram();
+
+        GlslangProgram program = new GlslangProgram(this, shaders, shaderPtr);
+        _programs.Add(program);
+
+        Console.WriteLine($"Created program with pointer: {program.nativePointer}\n");
+
+        return program;
+    }
+
+    [DllImport(libraryPath, CallingConvention = CallingConvention.Cdecl)] 
+    private static extern void GlslangDeleteProgram(IntPtr program);
+
+    public void DeleteProgram(GlslangProgram program)
+    {
+        // Confirm that program was created by this compiler
+        if (_programs.Remove(program))
+        {
+            Console.WriteLine($"Deleting program...");
+            GlslangDeleteProgram(program.nativePointer);
+            Console.WriteLine($"Deleted program with pointer: {program.nativePointer}");
+        }
+    }
 
 
-    [DllImport(libraryPath, CallingConvention = CallingConvention.Cdecl)] private static extern IntPtr DisassembleSPIRVBinary([In] uint[] input, nint size); // Returns a char* string
+    [DllImport(libraryPath, CallingConvention = CallingConvention.Cdecl)] 
+    private static extern IntPtr GlslangDisassembleSPIRVBinary([In] uint[] input, nint size); // Returns a char* string
+    public string DisassembleSpirVBinary(uint[] input) // Must be instance method to force creation of ShaderCompiler
+    {
+        return AllocUtility.AutoString(GlslangDisassembleSPIRVBinary(input, input.Length));
+    }
 
 
     [DllImport(libraryPath, CallingConvention = CallingConvention.Cdecl)] 
@@ -80,8 +112,12 @@ public class ShaderCompiler : IDisposable
     public void Dispose()
     {
         Console.WriteLine("Disposing Shader Compiler...\n");
+
         foreach (GlslangShader shader in _shaders.ToArray())
             DeleteShader(shader);
+
+        foreach (GlslangProgram program in _programs.ToArray())
+            DeleteProgram(program);
 
         GlslangFinalizeProcess();
         _instance = null;
@@ -94,9 +130,7 @@ public class ShaderCompiler : IDisposable
     {
         if (_instance != null)
         {
-            Console.Write(new WarningException(
-                "Glslang Shader Compiler was not properly disposed of. Please make sure to call Dispose() or wrap compiler in a using statement."
-            ).ToString());
+            Console.Write(new WarningException("Glslang Shader Compiler was not properly disposed of. Please make sure to call Dispose() or wrap compiler in a using statement.").ToString());
 
             Dispose();
         }

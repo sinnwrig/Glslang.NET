@@ -61,9 +61,9 @@ public class GlslangShader
 
 
     [DllImport(ShaderCompiler.libraryPath, CallingConvention = CallingConvention.Cdecl)] 
-    private static extern void GlslangShaderSetOptions(IntPtr shader, int options);
+    private static extern void GlslangShaderSetOptions(IntPtr shader, ShaderOptions options);
 
-    public void SetOptions(int options)
+    public void SetOptions(ShaderOptions options)
     {
         ValidateInitialized();
         GlslangShaderSetOptions(nativePointer, options);

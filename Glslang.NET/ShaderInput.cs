@@ -36,8 +36,8 @@ public struct ShaderInput
     public string code;
     public int defaultVersion;
     public ShaderProfile defaultProfile;
-    public int forceDefaultVersionAndProfile;
-    public int forwardCompatible;
+    public bool forceDefaultVersionAndProfile;
+    public bool forwardCompatible;
     public Messages messages;
     public ShaderResource resource;
     public IncludeCallbacks includeCallbacks;
@@ -61,8 +61,8 @@ public struct ShaderInput
             code = code,
             defaultVersion = defaultVersion,
             defaultProfile = defaultProfile,
-            forceDefaultVersionAndProfile = forceDefaultVersionAndProfile,
-            forwardCompatible = forwardCompatible,
+            forceDefaultVersionAndProfile = forceDefaultVersionAndProfile ? 1 : 0,
+            forwardCompatible = forwardCompatible ? 1 : 0,
             messages = messages,
             resource = AllocUtility.AllocStruct(resource), // Allocate resource memory
             callbacks = includeCallbacks.GetCallbacks(),
