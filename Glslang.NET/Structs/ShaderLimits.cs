@@ -1,0 +1,18 @@
+using System.Runtime.InteropServices;
+
+namespace Glslang;
+
+
+[StructLayout(LayoutKind.Sequential)]
+public struct ShaderLimits 
+{
+    public bool nonInductiveForLoops;
+    public bool whileLoops;
+    public bool doWhileLoops;
+    public bool generalUniformIndexing;
+    public bool generalAttributeMatrixVectorIndexing;
+    public bool generalVaryingIndexing;
+    public bool generalSamplerIndexing;
+    public bool generalVariableIndexing;
+    public bool generalConstantMatrixVectorIndexing;
+} 

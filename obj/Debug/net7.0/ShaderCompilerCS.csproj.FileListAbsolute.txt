@@ -1,0 +1,14 @@
+/home/amog_os/Documents/Projects/ShaderCompilerCS/bin/Debug/net7.0/ShaderCompilerCS
+/home/amog_os/Documents/Projects/ShaderCompilerCS/bin/Debug/net7.0/ShaderCompilerCS.deps.json
+/home/amog_os/Documents/Projects/ShaderCompilerCS/bin/Debug/net7.0/ShaderCompilerCS.runtimeconfig.json
+/home/amog_os/Documents/Projects/ShaderCompilerCS/bin/Debug/net7.0/ShaderCompilerCS.dll
+/home/amog_os/Documents/Projects/ShaderCompilerCS/bin/Debug/net7.0/ShaderCompilerCS.pdb
+/home/amog_os/Documents/Projects/ShaderCompilerCS/obj/Debug/net7.0/ShaderCompilerCS.GeneratedMSBuildEditorConfig.editorconfig
+/home/amog_os/Documents/Projects/ShaderCompilerCS/obj/Debug/net7.0/ShaderCompilerCS.AssemblyInfoInputs.cache
+/home/amog_os/Documents/Projects/ShaderCompilerCS/obj/Debug/net7.0/ShaderCompilerCS.AssemblyInfo.cs
+/home/amog_os/Documents/Projects/ShaderCompilerCS/obj/Debug/net7.0/ShaderCompilerCS.csproj.CoreCompileInputs.cache
+/home/amog_os/Documents/Projects/ShaderCompilerCS/obj/Debug/net7.0/ShaderCompilerCS.dll
+/home/amog_os/Documents/Projects/ShaderCompilerCS/obj/Debug/net7.0/refint/ShaderCompilerCS.dll
+/home/amog_os/Documents/Projects/ShaderCompilerCS/obj/Debug/net7.0/ShaderCompilerCS.pdb
+/home/amog_os/Documents/Projects/ShaderCompilerCS/obj/Debug/net7.0/ShaderCompilerCS.genruntimeconfig.cache
+/home/amog_os/Documents/Projects/ShaderCompilerCS/obj/Debug/net7.0/ref/ShaderCompilerCS.dll
