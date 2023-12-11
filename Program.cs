@@ -32,6 +32,19 @@ public class Program
             };
 
             GlslangShader shader = compiler.CreateShader(input);
+
+            if (!shader.Preprocess(out string info, out string debugInfo))	
+            {
+                Console.WriteLine($"GLSL preprocessing failed:\n{info}");
+            }
+
+            if (!shader.Parse(out info, out debugInfo)) 
+            {
+                Console.WriteLine($"GLSL parsing failed\n{info}Preprocessed Code:{shader.GetPreprocessedCode()}");
+            }
+
+
+            GlslangProgram program = compiler.CreateProgram();
         }
     }
 
