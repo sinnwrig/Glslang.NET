@@ -39,15 +39,6 @@ public class Program
         }
 
         Console.WriteLine("Compilation success");
-
-
-        foreach (OutKind kind in Enum.GetValues(typeof(OutKind)))
-        {
-            if (result.GetByteOutput(kind, out _, out _))
-            {
-                Console.WriteLine($"Got output hit on {Enum.GetName(typeof(OutKind), kind)}");
-            }
-        }
     }
 }
 

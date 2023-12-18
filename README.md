@@ -1,12 +1,15 @@
-# Glslang Wrapper for .NET
+# DirectXShaderCompiler cross-platform wrapper for .NET
 
-### Baby's first wrapper
+### Baby's first .NET wrapper
 
-Usage maps closely to the use of the C Functional Interface of Glslang<br>
-However, there are notable changes to make use in C# smoother<br><br>
+A wrapper for the DirectXShaderCompiler that does not use Windows-Specific COM interfaces<br><br>
 
-Creating and using shader preprocessors and programs require an instance of the ShaderCompiler class<br>
-ShaderCompiler class must be wrapped in a 'using()' statement<br>
+To Compile: Run build_deps.py to build DirectXShaderCompiler from source and expose a C-Style interface in the library<br><br>
 
-See the Program.cs file for a simple compilation of a few GLSL/HLSL shaders
+To use:<br>
+Create a new DxCompiler<br>
+Call DxCompiler.Compile() with the shader code and compiler arguments<br>
+see https://github.com/microsoft/DirectXShaderCompiler/wiki/Using-dxc.exe-and-dxcompiler.dll for a list of how to create the argument array<br><br>
+Get outputs with the DxResult that Compile() returns<br>
+
 

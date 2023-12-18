@@ -20,8 +20,6 @@ public class DxcIncludeHandler : SafeHandle
     private delegate DxcBuffer NativeHandlerDelegate(IntPtr context, IntPtr filenameutf8);
     private static DxcBuffer IncludeHandlerNative(IntPtr contextPtr, IntPtr filenameutf8)
     {
-        Console.WriteLine("Native include handler called");
-
         string? filename = Marshal.PtrToStringUTF8(filenameutf8);
 
         if (filename == null)
