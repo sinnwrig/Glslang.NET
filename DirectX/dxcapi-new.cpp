@@ -327,7 +327,7 @@ extern "C"
     }
 
 
-    void CopyBlobToBuffer(IDxcBlobEncoding* blob, WritableDxcBuffer* buffer)
+    void CopyBlobToBuffer(IDxcBlob* blob, WritableDxcBuffer* buffer)
     {   
         if (blob == nullptr || buffer == nullptr)
         {
@@ -351,15 +351,21 @@ extern "C"
 
         buffer->Ptr = malloc(bufferSize);
         buffer->Size = bufferSize;
+        buffer->Encoding = 0;
 
         memcpy(buffer->Ptr, bufferPtr, bufferSize);
 
-        // Get encoding for output blob
-        BOOL encodingKnown = FALSE;
-        UINT32 codePage = 0;
+        // Try to extract the encoding from the blob
+        IDxcBlobEncoding* encodedBlob = nullptr;
+        if (SUCCEEDED(blob->QueryInterface(IID_PPV_ARGS(&encodedBlob))))
+        {
+            // Get encoding for output blob
+            BOOL encodingKnown = FALSE;
+            UINT32 codePage = 0;
 
-        if (SUCCEEDED(blob->GetEncoding(&encodingKnown, &codePage)))
-            buffer->Encoding = encodingKnown ? codePage : 0;
+            if (SUCCEEDED(encodedBlob->GetEncoding(&encodingKnown, &codePage)))
+                buffer->Encoding = encodingKnown ? codePage : 0;
+        }
 
         blob->Release();
     }
@@ -371,24 +377,34 @@ extern "C"
         SetEmpty(output);
         SetEmpty(shaderName);
 
+        printf("Getting output\n");
+
         if (result == nullptr || output == nullptr)
+        {
+            printf("Invalid result or output arguments\n");
             return false;
+        }   
           
         if (!result->HasOutput(kind))
+        {
+            printf("No output found\n");
             return false;
+        }
 
-        IDxcBlobEncoding* blobOutput = nullptr;
+        IDxcBlob* blobOutput = nullptr;
         IDxcBlobWide* blobName = nullptr;
 
         HRESULT hr = result->GetOutput(kind, IID_PPV_ARGS(&blobOutput), &blobName);
 
         if (SUCCEEDED(hr))
         {
+            printf("Output collected\n");
             CopyBlobToBuffer(blobOutput, output);
             CopyBlobToBuffer(blobName, shaderName);
             return true;
         }
 
+        printf("Could not get output: error code %i\n", hr);
         return false;
     }
 
