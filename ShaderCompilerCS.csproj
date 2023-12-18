@@ -7,16 +7,19 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-  <Target Name="CompileBeforeBuild" BeforeTargets="Build">
-    <Exec Command="clang++ -shared -o glslang/glslang.so -fPIC glslang/glslang.cpp -Iglslang/include -Lglslang/static -lglslangmerged" />
-  </Target>
+  <ItemGroup>
+    <!-- ... existing items ... -->
+    <Compile Remove="DirectX\**\*.*" />
+    <None Remove="DirectX\**\*.*" />
+  </ItemGroup>
 
-  <Target Name="CompileBeforeRebuild" BeforeTargets="Rebuild">
-    <Exec Command="clang++ -shared -o glslang/glslang.so -fPIC glslang/glslang.cpp -Iglslang/include -Lglslang/static -lglslangmerged" />
-  </Target>
 
   <Target Name="CompileBeforeRun" BeforeTargets="Run">
-    <Exec Command="clang++ -shared -o glslang/glslang.so -fPIC glslang/glslang.cpp -Iglslang/include -Lglslang/static -lglslangmerged" />
+    <Exec Command="cd DirectX/DXBuild ; ninja -j4 ; cd ../../" />
+  </Target>
+
+  <Target Name="CompileBeforeBuild" BeforeTargets="Build">
+    <Exec Command="cd DirectX/DXBuild ; ninja -j4 ; cd ../../" />
   </Target>
 
 </Project>

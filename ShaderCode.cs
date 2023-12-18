@@ -29,40 +29,43 @@ void main()
 
 
 
-public const string VertexCodeHlsl = @"
-struct appdata
+public const string VertexCodeHlsl = """
+
+#include "somefile.hlsl"
+
+struct VertexInput
 {
-    float2 position : POSITION;
-    float4 color : COLOR;
+    float2 Position : POSITION;
+    float4 Color : COLOR0;
 };
 
-
-struct v2f
+struct VertexOutput
 {
-    float4 position : SV_POSITION;
-    float4 color : COLOR;
+    float4 Position : SV_POSITION;
+    float4 Color : COLOR0;
 };
 
-
-v2f main(appdata input)
+VertexOutput main(VertexInput input)
 {
-    v2f output;
-
-    output.position = float4(input.position.xy, 0, 1);
-    output.color = input.color;
-
+    VertexOutput output;
+    output.Position = float4(input.Position, 0, 1);
+    output.Color = input.Color;
     return output;
-}";
+}
+""";
 
-    public const string FragmentCodeHlsl = @"
-struct v2f
+    public const string FragmentCodeHlsl = """
+
+#include "somefile.hlsl"
+
+struct VertexOutput
 {
-    float4 position : SV_POSITION;
-    float4 color : COLOR;
+    float4 Color : COLOR0;
 };
 
-float4 main(v2f input) : SV_COLOR
+float4 main(VertexOutput input) : SV_Target
 {
-    return input.color;
-}";
+    return input.Color;
+}
+""";
 }
