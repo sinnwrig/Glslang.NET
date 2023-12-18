@@ -47,7 +47,6 @@ public class DxcIncludeHandler : SafeHandle
     private static extern IntPtr CreateIncludeHandler(IntPtr ctx, IntPtr delegatePtr);
 
 
-    // DeleteIncludeHandler will also delete the context allocated in constructor
     [DllImport(Global.LibraryPath, CallingConvention = CallingConvention.Cdecl)]
     private static extern void DeleteIncludeHandler(IntPtr handler);
 
