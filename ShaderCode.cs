@@ -51,7 +51,6 @@ VertexOutput main(VertexInput input)
     output.Position = float4(input.Position, 0, 1);
     output.Color = input.Color;
     return output;
-    vec3 googoo;
 }
 """;
 

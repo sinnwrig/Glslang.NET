@@ -12,11 +12,6 @@ public class Program
     {
         Process currentProcess = Process.GetCurrentProcess();
 
-        Console.WriteLine($"Private Memory Size: {currentProcess.PrivateMemorySize64 / 1024} KB");
-        Console.WriteLine($"Virtual Memory Size: {currentProcess.VirtualMemorySize64 / 1024} KB");
-        Console.WriteLine($"Working Set: {currentProcess.WorkingSet64 / 1024} KB");
-
-
         using ShaderCompiler compiler = new ShaderCompiler();
 
         CompilerOptions options = new CompilerOptions(new ShaderProfile(ShaderType.Vertex, 5, 0))
@@ -26,27 +21,17 @@ public class Program
             debugInfo = DebugInfoType.Slim
         };
 
-        Console.WriteLine("Compiling shader multiple times");
+        Console.WriteLine("Compiling shader");
 
-        for (int i = 0; i < 100; i++)
+        using CompilationOutput output = compiler.Compile(ShaderCode.VertexCodeHlsl, options);
+
+        if (output.GetStatus() != null)
         {
-            using CompilationOutput output = compiler.Compile(ShaderCode.VertexCodeHlsl, options);
-
-            if (output.GetStatus() != null)
-            {
-                output.GetTextOutput(OutKind.Errors, out string errors, out _);
-                //Console.WriteLine($"Error:{errors}");
-            }
-
-            output.GetByteOutput(OutKind.Object, out byte[] bytes, out _);
+            output.GetTextOutput(OutKind.Errors, out string errors, out _);
+            Console.WriteLine($"Error:{errors}");
         }
 
-
-        GC.Collect();
-        
-        Console.WriteLine($"Private Memory Size: {currentProcess.PrivateMemorySize64 / 1024} KB");
-        Console.WriteLine($"Virtual Memory Size: {currentProcess.VirtualMemorySize64 / 1024} KB");
-        Console.WriteLine($"Working Set: {currentProcess.WorkingSet64 / 1024} KB");
+        output.GetByteOutput(OutKind.Object, out byte[] bytes, out _);
 
         Console.WriteLine("Compilation success");
     }
