@@ -1,5 +1,5 @@
-﻿using System.Runtime.InteropServices;
-using DirectX;
+﻿using System.Diagnostics;
+using DXCompiler.NET;
 
 namespace Application;
 
@@ -10,41 +10,43 @@ public class Program
 
     public static void Main(string[] args)
     {
-        Exception? exT = Marshal.GetExceptionForHR(-2147467262);
+        Process currentProcess = Process.GetCurrentProcess();
 
-        if (exT != null)
+        Console.WriteLine($"Private Memory Size: {currentProcess.PrivateMemorySize64 / 1024} KB");
+        Console.WriteLine($"Virtual Memory Size: {currentProcess.VirtualMemorySize64 / 1024} KB");
+        Console.WriteLine($"Working Set: {currentProcess.WorkingSet64 / 1024} KB");
+
+
+        using ShaderCompiler compiler = new ShaderCompiler();
+
+        CompilerOptions options = new CompilerOptions(new ShaderProfile(ShaderType.Vertex, 5, 0))
         {
-            Console.WriteLine($"Exception: {exT.Message}");
-        }
-
-
-        DxcCompiler compiler = new DxcCompiler();
-
-        string[] cArgs = new string[]
-        {
-            "-spirv",
-            "vertshader.hlsl",         // Optional shader source file name for error reporting  
-            "-E", "main",              // Entry point.
-            "-T", "vs_6_0",            // Target.
-            "-Zs",                     // Enable debug information (slim format)
+            entryPoint = "main",
+            generateAsSpirV = true,
+            debugInfo = DebugInfoType.Slim
         };
 
-        Console.WriteLine("Compiling shader");
-        DxcResult result = compiler.Compile(ShaderCode.VertexCodeHlsl, cArgs);
+        Console.WriteLine("Compiling shader multiple times");
 
-        Exception? ex = result.GetStatus();
-
-        if (ex != null)
+        for (int i = 0; i < 100; i++)
         {
-            if (result.GetTextOutput(OutKind.Errors, out string errors, out _))
-                Console.WriteLine($"Error:{errors}");
+            using CompilationOutput output = compiler.Compile(ShaderCode.VertexCodeHlsl, options);
 
-            Console.WriteLine("Compilation failed");
-            return;
+            if (output.GetStatus() != null)
+            {
+                output.GetTextOutput(OutKind.Errors, out string errors, out _);
+                //Console.WriteLine($"Error:{errors}");
+            }
+
+            output.GetByteOutput(OutKind.Object, out byte[] bytes, out _);
         }
 
-        if (result.GetByteOutput(OutKind.Object, out byte[] bytes, out _))
-            Console.WriteLine($"{bytes.Length} bytes of spirv code outputted");
+
+        GC.Collect();
+        
+        Console.WriteLine($"Private Memory Size: {currentProcess.PrivateMemorySize64 / 1024} KB");
+        Console.WriteLine($"Virtual Memory Size: {currentProcess.VirtualMemorySize64 / 1024} KB");
+        Console.WriteLine($"Working Set: {currentProcess.WorkingSet64 / 1024} KB");
 
         Console.WriteLine("Compilation success");
     }

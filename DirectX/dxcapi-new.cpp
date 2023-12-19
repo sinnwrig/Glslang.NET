@@ -372,24 +372,16 @@ extern "C"
 
 
     // Allocates an output and name buffer based on the result output kind. These buffers must be released with FreeResultOutput()
-    DXC_API_IMPORT BOOL GetResultOutput(IDxcResult* result, DXC_OUT_KIND kind, WritableDxcBuffer* output, WritableDxcBuffer* shaderName)
+    DXC_API_IMPORT HRESULT GetResultOutput(IDxcResult* result, DXC_OUT_KIND kind, WritableDxcBuffer* output, WritableDxcBuffer* shaderName)
     {
+        if (result == nullptr || output == nullptr)
+            return E_INVALIDARG;
+        
         SetEmpty(output);
         SetEmpty(shaderName);
 
-        printf("Getting output\n");
-
-        if (result == nullptr || output == nullptr)
-        {
-            printf("Invalid result or output arguments\n");
-            return false;
-        }   
-          
         if (!result->HasOutput(kind))
-        {
-            printf("No output found\n");
-            return false;
-        }
+            return E_FAIL;
 
         IDxcBlob* blobOutput = nullptr;
         IDxcBlobWide* blobName = nullptr;
@@ -398,14 +390,12 @@ extern "C"
 
         if (SUCCEEDED(hr))
         {
-            printf("Output collected\n");
             CopyBlobToBuffer(blobOutput, output);
             CopyBlobToBuffer(blobName, shaderName);
-            return true;
+            return S_OK;
         }
 
-        printf("Could not get output: error code %i\n", hr);
-        return false;
+        return hr;
     }
 
 

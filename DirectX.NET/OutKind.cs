@@ -1,4 +1,4 @@
-namespace DirectX;
+namespace DXCompiler.NET;
 
 public enum OutKind
 {
