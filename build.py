@@ -8,34 +8,6 @@ import requests
 from pathlib import Path
 
 
-def download_folder(repo_owner, repo_name, folder_path, branch='main', output_dir='.'):
-    # Create the GitHub API URL for the contents of the folder
-    api_url = f'https://api.github.com/repos/{repo_owner}/{repo_name}/contents/{folder_path}?ref={branch}'
-
-    # Send a GET request to the GitHub API
-    response = requests.get(api_url)
-
-    # Check if the request was successful
-    if response.status_code == 200:
-        # Create the output directory if it doesn't exist
-        output_path = Path(output_dir)
-        output_path.mkdir(parents=True, exist_ok=True)
-
-        # Iterate through the files in the folder and download each one
-        for file_info in response.json():
-            download_url = file_info['download_url']
-            file_name = os.path.join(output_path, file_info['name'])
-
-            with requests.get(download_url) as file_response:
-                with open(file_name, 'wb') as file:
-                    file.write(file_response.content)
-
-        print(f"Downloaded files from '{folder_path}' to '{output_path}'")
-    else:
-        print(f"Failed to fetch contents. Status code: {response.status_code}")
-        print(response.text)
-
-
 # should not run as submodule
 if __name__ != "__main__":
     exit()
@@ -61,7 +33,7 @@ dx_directory = os.path.join(source_directory, 'DirectX')
 dx_source_dir = os.path.join(dx_directory, 'DXCompiler')
 dx_build_dir = os.path.join(dx_directory, 'DXBuild-' + target_platform)
 dia_source_dir = os.path.join(dx_directory, 'DiaSDK')
-deps_source_dir = os.path.join(dx_directory, 'Dependencies')
+deps_source_dir = os.path.join(dx_directory, 'DevKit')
 
 
 def check_tool(tool_name):
@@ -103,24 +75,16 @@ def git_clone_or_pull(repo_url, destination_dir):
 # clone original dxc repository
 git_clone_or_pull(dx_repo, dx_source_dir)
 
-# Replace these values with your GitHub repository information
-repository_owner = 'your_username'
-repository_name = 'your_repository'
-folder_to_download = 'path/to/folder'
-branch_name = 'main'  # Replace with the branch you want to download from
-output_directory = 'downloaded_files'
-
-# Download the specified folder
-download_folder(repository_owner, repository_name, folder_to_download, branch_name, output_directory)
-
 if target_platform == 'Windows':
     git_clone_or_pull(dia_repo, dia_source_dir)
     dia_include_dir = os.path.join(dia_source_dir, 'include')
     dia_lib_path = os.path.join(dia_source_dir, 'lib' 'X64', 'diaguids.lib')
 
     git_clone_or_pull(deps_repo, deps_source_dir)
-    deps_include_dir = os.path.join(dia_source_dir, 'include')
-    deps_lib_path = os.path.join(dia_source_dir, 'lib' 'X64', 'diaguids.lib')
+    deps_include_dir = os.path.join(deps_source_dir, 'include')
+    deps_lib_path = os.path.join(deps_source_dir, 'lib', 'd3d12.lib')
+    deps_lib_path += ' ' + os.path.join(deps_source_dir, 'lib', 'dxgi.lib')
+    deps_lib_path += ' ' + os.path.join(deps_source_dir, 'lib', 'd3dcompiler.lib')
 
 # create build directory
 os.makedirs(dx_build_dir, exist_ok=True)
@@ -142,6 +106,9 @@ if target_platform == 'Windows':
     args.append('-DCMAKE_C_COMPILER=' + c_compiler)
     args.append('-DCMAKE_CXX_COMPILER=' + cxx_compiler)
     args.append('-DDIASDK_GUIDS_LIBRARY=' + dia_lib_path)
+
+    args.append('-DD3D12_INCLUDE_DIRS=' + deps_include_dir)
+    args.append('-DD3D12_LIBRARIES=' + deps_lib_path)
     
 
 args.append('-C')
