@@ -2,33 +2,41 @@ namespace DXCompiler.NET;
 
 public enum ShaderType : ushort
 {
-    Vertex,
     Pixel, 
-    Domain,
+    Vertex,
+    Geometry,
     Hull,
+    Domain,
+    Compute,
+    Library,
     Mesh,
     Amplification,
-    Library,
-    Geometry,
-    Compute,
 }
 
 
 public static class ShaderTypeExtensions
-{
+{  
+    public static bool SupportsVersion(this ShaderType type, ushort version, ushort subVersion)
+    {
+        return type.MinimumVersion() <= (ushort)(version * 10 + subVersion);
+    }
+
+
+    // Sadly DXC only supports shader model 6.0+
     public static ushort MinimumVersion(this ShaderType type)
     {
-        return type switch {
-            ShaderType.Vertex => 40,
-            ShaderType.Pixel => 40,
-            ShaderType.Domain => 50,
-            ShaderType.Hull => 50,
-            ShaderType.Mesh => 60,
-            ShaderType.Amplification => 60,
-            ShaderType.Library => 51,
-            ShaderType.Geometry => 40,
-            ShaderType.Compute => 40,
-            _ => 40
+        return type switch
+        {
+            ShaderType.Pixel => 60,
+            ShaderType.Vertex => 60,
+            ShaderType.Geometry => 60,
+            ShaderType.Hull => 60,
+            ShaderType.Domain => 60,
+            ShaderType.Compute => 60,
+            ShaderType.Library => 61,
+            ShaderType.Mesh => 65,
+            ShaderType.Amplification => 65,
+            _ => throw new ArgumentException($"Invalid ShaderType: {type}"),
         };
     }
 
@@ -36,17 +44,16 @@ public static class ShaderTypeExtensions
     public static string Abbreviation(this ShaderType type)
     {
         return type switch {
-            ShaderType.Vertex => "vs",
-            ShaderType.Pixel => "ps",
-            ShaderType.Domain => "ds",
-            ShaderType.Hull => "hs",
-            ShaderType.Mesh => "ms",
+            ShaderType.Vertex        => "vs",
+            ShaderType.Pixel         => "ps",
+            ShaderType.Domain        => "ds",
+            ShaderType.Hull          => "hs",
+            ShaderType.Mesh          => "ms",
             ShaderType.Amplification => "as",
-            ShaderType.Library => "lib",
-            ShaderType.Geometry => "gs",
-            ShaderType.Compute => "cs",
-            
-            _ => "vs"
+            ShaderType.Library       => "lib",
+            ShaderType.Geometry      => "gs",
+            ShaderType.Compute       => "cs",
+            _ => "unknown"
         };
     }
 }
@@ -57,11 +64,11 @@ public static class ShaderTypeExtensions
 public class ShaderProfile
 {
     private ShaderType type;
-    private ushort version = 5;
+    private ushort version = 6;
     private ushort subVersion = 0;
 
 
-    public ShaderProfile(ShaderType type, int version, int subVersion)
+    public ShaderProfile(ShaderType type, int version = -1, int subVersion = -1)
     {
         this.type = type;
         this.version = (ushort)version;
@@ -69,7 +76,7 @@ public class ShaderProfile
     }
 
 
-    public bool IsValid() => type.MinimumVersion() < (version * 10) + subVersion;
+    public bool IsValid() => type.SupportsVersion(version, subVersion);
 
     public void Validate() 
     {
@@ -98,7 +105,7 @@ public class ShaderProfile
 
         set
         {
-            version = (ushort)Math.Clamp(value, 4, 10);
+            version = (ushort)Math.Clamp(value, 6, 10);
         }
     }
 
@@ -109,7 +116,8 @@ public class ShaderProfile
 
         set
         {
-            subVersion = (ushort)Math.Clamp(value, 4, 10);
+            // Sub-version can't go above 8.
+            subVersion = (ushort)Math.Clamp(value, 0, 8);
         }
     }
 

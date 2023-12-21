@@ -1,4 +1,5 @@
-bin/
 obj/
-DXBuild/
+DXBuild-Linux/
+DXBuild-Windows/
+DXBuild-Darwin/
 DXCompiler/
