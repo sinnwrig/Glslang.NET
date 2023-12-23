@@ -7,9 +7,10 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-   <ItemGroup>
-    <None Update="DirectX\library\*.*">
+  <ItemGroup>
+    <None Update="DirectX/library/*.*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>%(Filename)%(Extension)</Link>
     </None>
   </ItemGroup>
 

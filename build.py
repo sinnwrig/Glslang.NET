@@ -97,7 +97,7 @@ if not os.path.exists(dest_path):
 os.makedirs(parent_lib_path, exist_ok=True)
 
 clang_command = [
-    'clang',
+    'clang++',
     '-shared',
     '-o',
     'library/' + wrapper_name,
@@ -105,9 +105,10 @@ clang_command = [
     'dxcwrapper.cpp',
     '-I' + dest_include_path,
     '-L' + dest_lib_path,
-    '-ldxcompiler'
+    '-ldxcompiler',
+    '-Wl,-rpath=$ORIGIN'
 ]
 
-subprocess.run(clang_command, cwd=parent_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+subprocess.run(clang_command, cwd=parent_dir, check=True)
 
 shutil.copy2(os.path.join(dest_lib_path, dxc_lib), os.path.join(parent_lib_path, dxc_lib))

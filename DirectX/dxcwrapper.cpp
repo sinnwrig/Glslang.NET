@@ -1,20 +1,15 @@
 #define __EMULATE_UUID
 
-#include "dxc/Support/WinIncludes.h"
-
-#ifdef _WIN32
-#define DXC_API_IMPORT __declspec(dllexport)
-#else
-#define DXC_API_IMPORT __attribute__((visibility("default")))
-#endif
-
+#include "dxc/dxcapi.h"
 #include "dxc/Support/Global.h"
 #include "dxc/Support/FileIOHelper.h"
-#include "dxc/dxcisense.h"
-#include "dxc/dxctools.h"
+
 
 #pragma region CAPI
 
+
+extern "C"
+{ 
 
 struct WritableDxcBuffer
 {
@@ -86,7 +81,7 @@ public:
             delete[] filenameUtf8;
 
             CComPtr<IDxcBlobEncoding> textBlob;
-            HRESULT hr = ::hlsl::DxcCreateBlob(result.Ptr, result.Size, false, true, true, result.Encoding, nullptr, &textBlob);
+            HRESULT hr = hlsl::DxcCreateBlob(result.Ptr, result.Size, false, true, true, result.Encoding, nullptr, &textBlob);
 
             if (result.Ptr != nullptr)
                 free(result.Ptr);
@@ -102,9 +97,6 @@ public:
     ~DelegateIncludeHandler() { }
 };  
 
-
-extern "C"
-{ 
 
     DXC_API_IMPORT IDxcCompiler3* CreateCompilerInstance()
     {

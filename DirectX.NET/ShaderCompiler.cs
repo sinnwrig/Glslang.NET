@@ -20,6 +20,8 @@ public partial class ShaderCompiler : NativeResourceHandle
 
     public ShaderCompiler(IncludeFileDelegate? includeDelegate = null)
     {
+        Global.ResolveAssemblies();
+        
         handle = CreateCompilerInstance();
         handler = new IncludeHandler(includeDelegate);
     }
