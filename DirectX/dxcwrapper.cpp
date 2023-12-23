@@ -29,20 +29,18 @@ public:
 
     void* context;
     IncludeFunc delegate;
+    IDxcUtils* utils; // For blob loading
 
-    DelegateIncludeHandler(void* ctx, IncludeFunc deleg) : context(ctx), delegate(deleg) { }
-
-
-    ULONG STDMETHODCALLTYPE AddRef() override
-    {
-        return 1;
+    DelegateIncludeHandler(void* ctx, IncludeFunc deleg) : context(ctx), delegate(deleg) 
+    { 
+        utils = nullptr;
+        DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&utils));
     }
 
 
-    ULONG STDMETHODCALLTYPE Release() override
-    {
-        return 1;
-    }
+    // Since the handler is managed by C#, use default new/delete behavior instead of ref counting
+    ULONG STDMETHODCALLTYPE AddRef() override { return 1; }
+    ULONG STDMETHODCALLTYPE Release() override { return 1; }
 
 
     HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void **ppvObject) override 
@@ -81,7 +79,8 @@ public:
             delete[] filenameUtf8;
 
             CComPtr<IDxcBlobEncoding> textBlob;
-            HRESULT hr = hlsl::DxcCreateBlob(result.Ptr, result.Size, false, true, true, result.Encoding, nullptr, &textBlob);
+
+            HRESULT hr = utils->CreateBlob(result.Ptr, result.Size, result.Encoding, &textBlob);
 
             if (result.Ptr != nullptr)
                 free(result.Ptr);
@@ -94,7 +93,11 @@ public:
         CATCH_CPP_RETURN_HRESULT();
     }
 
-    ~DelegateIncludeHandler() { }
+    ~DelegateIncludeHandler() 
+    { 
+        if (utils != nullptr)
+            utils->Release();
+    }
 };  
 
 
@@ -109,7 +112,7 @@ public:
     DXC_API_IMPORT void DeleteCompilerInstance(IDxcCompiler3* compiler)
     {
         if (compiler != nullptr)
-          compiler->Release();
+            compiler->Release();
     }
 
 

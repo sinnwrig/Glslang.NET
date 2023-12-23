@@ -96,6 +96,7 @@ if not os.path.exists(dest_path):
 # create the output library path
 os.makedirs(parent_lib_path, exist_ok=True)
 
+# make a version of this that works on Windows since c++ compilers are a pain to get working on PowerShell
 clang_command = [
     'clang++',
     '-shared',

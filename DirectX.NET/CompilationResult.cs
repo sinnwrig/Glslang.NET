@@ -12,15 +12,15 @@ public class CompilationOutput : NativeResourceHandle
     }
 
 
-    [DllImport(Global.LibraryPath, CallingConvention = CallingConvention.Cdecl)]
+    [DllImport(Global.Library, CallingConvention = CallingConvention.Cdecl)]
     private static extern void FreeResult(IntPtr result);
 
     // Allocates an output and name buffer based on the result output kind. These buffers must be released with FreeBuffer
-    [DllImport(Global.LibraryPath, CallingConvention = CallingConvention.Cdecl)]
+    [DllImport(Global.Library, CallingConvention = CallingConvention.Cdecl)]
     private static extern int GetResultOutput(IntPtr result, OutKind kind, out NativeBuffer output, out NativeBuffer shaderName);
 
     // Get the status of the program
-    [DllImport(Global.LibraryPath, CallingConvention = CallingConvention.Cdecl)]
+    [DllImport(Global.Library, CallingConvention = CallingConvention.Cdecl)]
     private static extern int GetStatus(IntPtr result);
 
 

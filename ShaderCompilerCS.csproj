@@ -10,7 +10,7 @@
   <ItemGroup>
     <None Update="DirectX/library/*.*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>%(Filename)%(Extension)</Link>
+      <!-- <Link>%(Filename)%(Extension)</Link> -->
     </None>
   </ItemGroup>
 

@@ -40,11 +40,11 @@ public class IncludeHandler : NativeResourceHandle
 
 
     // Free with DeleteIncludeHandler
-    [DllImport(Global.LibraryPath, CallingConvention = CallingConvention.Cdecl)]
+    [DllImport(Global.Library, CallingConvention = CallingConvention.Cdecl)]
     private static extern IntPtr CreateIncludeHandler(IntPtr ctx, IntPtr delegatePtr);
 
 
-    [DllImport(Global.LibraryPath, CallingConvention = CallingConvention.Cdecl)]
+    [DllImport(Global.Library, CallingConvention = CallingConvention.Cdecl)]
     private static extern void DeleteIncludeHandler(IntPtr handler);
 
 

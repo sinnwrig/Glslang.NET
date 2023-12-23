@@ -5,7 +5,9 @@ namespace DXCompiler.NET;
 
 public static class Global
 {
-    public const string LibraryPath = "libdxcwrapper.so";
+    private static readonly string[] LibraryPath = new string[] { "DirectX", "library" };
+
+    public const string Library = "dxcwrapper";
 
 
     private static bool _assembliesResolved;
@@ -15,37 +17,33 @@ public static class Global
         if (_assembliesResolved)
             return;
 
+        NativeLibrary.SetDllImportResolver(Assembly.GetExecutingAssembly(), DllImportResolver);
+
         _assembliesResolved = true;
     }
 
 
     private static IntPtr DllImportResolver(string libraryName, Assembly assembly, DllImportSearchPath? searchPath)
     {
-        Console.WriteLine("resolving " + libraryName);
+        if (libraryName != Library)
+            return IntPtr.Zero;
 
         string? assemblyDirectory = Path.GetDirectoryName(assembly.Location);
-        string libraryDirectory = Path.Combine(assemblyDirectory, "DirectX", "library");
 
-        Console.WriteLine("lib dir path: " + libraryDirectory);
+        if (assemblyDirectory == null)
+            return IntPtr.Zero;
 
+        string libraryDirectory = Path.Combine(assemblyDirectory, LibraryPath[0], LibraryPath[1]);
 
-        if (libraryName == "dxcwrapper" || libraryName == "dxcompiler")
-        {
-            OSPlatform platform = GetPlatform();
+        OSPlatform platform = GetPlatform();
 
-            string library = platform == OSPlatform.Linux ? "lib" : string.Empty;
-            library += libraryName;
-            library += platform == OSPlatform.Linux ? ".so" : ".dll";
+        string library = platform == OSPlatform.Linux ? "lib" : string.Empty;
+        library += libraryName;
+        library += platform == OSPlatform.Linux ? ".so" : ".dll";
 
-            string libPath = Path.Combine(libraryDirectory, library);
+        string libPath = Path.Combine(libraryDirectory, library);
 
-            Console.WriteLine("full lib path: " + libPath);
-
-            return NativeLibrary.Load(libPath, assembly, searchPath);
-        }
-
-        // Otherwise, fallback to default import resolver.
-        return IntPtr.Zero;
+        return NativeLibrary.Load(libPath, assembly, searchPath);
     }
 
 

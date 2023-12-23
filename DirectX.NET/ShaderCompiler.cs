@@ -10,11 +10,11 @@ public partial class ShaderCompiler : NativeResourceHandle
 
 
     // Free with DeleteCompilerInstance
-    [DllImport(Global.LibraryPath, CallingConvention = CallingConvention.Cdecl)]
+    [DllImport(Global.Library, CallingConvention = CallingConvention.Cdecl)]
     private static extern IntPtr CreateCompilerInstance();
 
     
-    [DllImport(Global.LibraryPath, CallingConvention = CallingConvention.Cdecl)]
+    [DllImport(Global.Library, CallingConvention = CallingConvention.Cdecl)]
     private static extern void DeleteCompilerInstance(IntPtr compiler);
 
 
@@ -29,7 +29,7 @@ public partial class ShaderCompiler : NativeResourceHandle
 
     // Takes in a compiler instance, a text buffer, the arguments, and an optional include handler
     // Assigns an IDxcResult instance which must be freed with FreeResult
-    [DllImport(Global.LibraryPath, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Unicode)]
+    [DllImport(Global.Library, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Unicode)]
     private static extern int Compile(
         IntPtr compiler, 
         NativeBuffer source, 
@@ -41,7 +41,7 @@ public partial class ShaderCompiler : NativeResourceHandle
     );
 
 
-    [DllImport(Global.LibraryPath, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Unicode)]
+    [DllImport(Global.Library, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Unicode)]
     private static extern void PrintWideString(IntPtr strPtr);
 
 
