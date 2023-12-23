@@ -7,9 +7,9 @@ A wrapper for the DirectXShaderCompiler that does not use Windows-Specific COM i
 To Compile: Run build_deps.py to build DirectXShaderCompiler from source and expose a C-Style interface in the library<br><br>
 
 To use:<br>
-Create a new DxCompiler<br>
-Call DxCompiler.Compile() with the shader code and compiler arguments<br>
-see https://github.com/microsoft/DirectXShaderCompiler/wiki/Using-dxc.exe-and-dxcompiler.dll for a list of how to create the argument array<br><br>
-Get outputs with the DxResult that Compile() returns<br>
+Create a new ShaderCompiler<br>
+Create a CompilerOptions object and set all the desired properties<br>
+Call ShaderCompiler.Compile() with the shader code and compiler options<br>
+Get outputs with the CompilationResult object that Compile() returns<br>
 
 

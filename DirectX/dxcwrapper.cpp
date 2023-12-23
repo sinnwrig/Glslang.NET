@@ -11,6 +11,7 @@
 extern "C"
 { 
 
+// Version of DxcBuffer that does not use constants
 struct WritableDxcBuffer
 {
     void* Ptr;
@@ -19,10 +20,11 @@ struct WritableDxcBuffer
 };
 
 
-/* Callback for local file inclusion */
-typedef WritableDxcBuffer (*IncludeFunc)(void* ctx, char* pFilename);
+// Callback for local file inclusion
+typedef WritableDxcBuffer (*IncludeFunc)(void* ctx, char* filename);
 
 
+// IncludeHandler that offloads file inclusion to a provided delegate, similar to the glslang C API
 class DelegateIncludeHandler : public IDxcIncludeHandler 
 {
 public:
@@ -31,18 +33,21 @@ public:
     IncludeFunc delegate;
     IDxcUtils* utils; // For blob loading
 
-    DelegateIncludeHandler(void* ctx, IncludeFunc deleg) : context(ctx), delegate(deleg) 
+    DelegateIncludeHandler(void* ctx, IncludeFunc deleg)  
     { 
+        context = ctx;
+        delegate = deleg;
         utils = nullptr;
         DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&utils));
     }
 
 
-    // Since the handler is managed by C#, use default new/delete behavior instead of ref counting
+    // Since the handler is managed by C#, ignore ref counting and let the managed runtime manually allocate/deallocate memory
     ULONG STDMETHODCALLTYPE AddRef() override { return 1; }
     ULONG STDMETHODCALLTYPE Release() override { return 1; }
 
 
+    // We are an IDxcIncludeHandler and nothing more
     HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void **ppvObject) override 
     {
         if (riid == __uuidof(IDxcIncludeHandler) || riid == __uuidof(IUnknown))
@@ -57,18 +62,19 @@ public:
     }
     
 
-    HRESULT STDMETHODCALLTYPE LoadSource(_In_ LPCWSTR pFilename, _COM_Outptr_result_maybenull_ IDxcBlob **ppIncludeSource) override 
+    HRESULT STDMETHODCALLTYPE LoadSource(_In_ LPCWSTR filename, _COM_Outptr_result_maybenull_ IDxcBlob **ppIncludeSource) override 
     {
         try 
         {   
-            size_t mbSize = std::wcstombs(nullptr, pFilename, 0);
+            // Convert wide string filename to utf-8
+            size_t mbSize = std::wcstombs(nullptr, filename, 0);
             if (mbSize == (size_t)-1)
                 throw std::runtime_error("wcstombs error");
 
             char* filenameUtf8 = new char[mbSize + 1]; // +1 for null terminator
 
             // Convert the wide string to multibyte
-            if (wcstombs(filenameUtf8, pFilename, mbSize + 1) == (size_t)-1) 
+            if (std::wcstombs(filenameUtf8, filename, mbSize + 1) == (size_t)-1) 
             {
                 delete[] filenameUtf8;
                 throw std::runtime_error("wcstombs error");
@@ -79,7 +85,6 @@ public:
             delete[] filenameUtf8;
 
             CComPtr<IDxcBlobEncoding> textBlob;
-
             HRESULT hr = utils->CreateBlob(result.Ptr, result.Size, result.Encoding, &textBlob);
 
             if (result.Ptr != nullptr)
