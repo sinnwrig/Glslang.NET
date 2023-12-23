@@ -7,19 +7,10 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-  <ItemGroup>
-    <!-- ... existing items ... -->
-    <Compile Remove="DirectX\**\*.*" />
-    <None Remove="DirectX\**\*.*" />
+   <ItemGroup>
+    <None Update="DirectX\library\*.*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
-
-
-  <Target Name="CompileBeforeRun" BeforeTargets="Run">
-    <Exec Command="cd DirectX/DXBuild ; ninja -j4 ; cd ../../" />
-  </Target>
-
-  <Target Name="CompileBeforeBuild" BeforeTargets="Build">
-    <Exec Command="cd DirectX/DXBuild ; ninja -j4 ; cd ../../" />
-  </Target>
 
 </Project>
