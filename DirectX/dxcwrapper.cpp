@@ -1,7 +1,11 @@
-#define __EMULATE_UUID
 
-#include "dxc/dxcapi.h"
+#ifndef _WIN32
+#define __EMULATE_UUID
+#endif
+
+
 #include "dxc/Support/Global.h"
+#include "dxc/dxcapi.h"
 #include "dxc/Support/FileIOHelper.h"
 
 
