@@ -1,6 +1,6 @@
 # DirectXShaderCompiler cross-platform wrapper for .NET
 
-# README IS NOT UP TO DATE -- PROJECT IS INCOMPLETE AND BUGGY
+## README IS NOT UP TO DATE -- PROJECT IS INCOMPLETE AND BUGGY
 
 ### Baby's first .NET wrapper
 
