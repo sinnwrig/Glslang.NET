@@ -1,5 +1,7 @@
 # DirectXShaderCompiler cross-platform wrapper for .NET
 
+# README IS NOT UP TO DATE -- PROJECT IS INCOMPLETE AND BUGGY
+
 ### Baby's first .NET wrapper
 
 A wrapper for the DirectXShaderCompiler that does not use Windows-Specific COM interfaces<br><br>
