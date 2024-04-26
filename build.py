@@ -1,147 +1,127 @@
-import shutil
 import sys
-import requests
-import zipfile
-import tarfile
 import io
 import os
 import platform
 import subprocess
 import argparse
-
+import json
+import gitreleases
+import requests
 
 
 # should not run as submodule
 if __name__ != "__main__":
     exit()
 
-def download_file(url):
-    response = requests.get(url, stream=True)
-
-    total_size = int(response.headers.get('content-length', 0))
-    block_size = 1024 * 8  # Adjust the block size as needed
-
-    downloaded_data = b""
-    
-    downloaded_size = 0
-    for data in response.iter_content(block_size):
-        downloaded_size += len(data)
-        downloaded_data += data
-
-        progress = (downloaded_size / total_size) * 100
-        sys.stdout.write("\rDownloading: [{:<50}] {:.2f}%".format('=' * int(progress / 2), progress))
-        sys.stdout.flush()
-
-    return response, downloaded_data
-
-
-def extract_temp(compressed_file, destination_directory, extract_name):
-    # Extract the contents to a temporary directory
-    temp_extract_path = os.path.join(destination_directory, 'temp')
-    compressed_file.extractall(temp_extract_path)
-
-    # Rename the extracted folder to the desired name
-    new_folder_path = os.path.join(destination_directory, extract_name)
-    shutil.move(temp_extract_path, new_folder_path)
-
-    # Clean up the temporary directory
-    os.rmdir(temp_extract_path)
-
-
-def download_zip(url, destination_directory, new_name):
-    # Make a request to get the content
-    response, data = download_file(url)
-    
-    # Check if the request was successful (status code 200)
-    if response.status_code == 200:
-        # Create a zip file object from the content
-        with zipfile.ZipFile(io.BytesIO(data)) as zip_file:
-            extract_temp(zip_file, destination_directory, new_name)
-        print("Download and extraction successful.")
-    else:
-        print(f"Failed to download file. Status code: {response.status_code}")
-
-
-def download_tar_gz(url, destination_directory, new_name):
-    # Make a request to get the content
-    response, data = download_file(url)
-    
-    # Check if the request was successful (status code 200)
-    if response.status_code == 200:
-        # Create a tar file object from the content
-        with tarfile.open(fileobj=io.BytesIO(data), mode="r:gz") as tar_file:
-            extract_temp(tar_file, destination_directory, new_name)
-        print("Download and extraction successful.")
-    else:
-        print(f"Failed to download file. Status code: {response.status_code}")
-
-
-parser = argparse.ArgumentParser(description='Build DirectX Compiler wrapper into a shared library')
-parser.add_argument('-P', '--platform', dest='platform', required=False, help='Platform type- Can be (Windows, Linux)')
-
-platform_type = parser.parse_args().platform or platform.system()
-
-print('Compiling for platform: ' + platform_type)
-
-
-dxc_win_build = "https://ci.appveyor.com/api/projects/dnovillo/directxshadercompiler/artifacts/build%2FRelease%2Fdxc-artifacts.zip?branch=main&pr=false&job=image%3A%20Visual%20Studio%202022"
-dxc_lin_build = "https://ci.appveyor.com/api/projects/dnovillo/directxshadercompiler/artifacts/build%2Fdxc-artifacts.tar.gz?branch=main&pr=false&job=image%3A%20Ubuntu"
-
-
 source_directory = os.getcwd()
 
-parent_dir = os.path.join(source_directory, 'DirectX')
-parent_lib_path = os.path.join(parent_dir, 'library')
+dest_dir = os.path.join(source_directory, 'DirectX')
 
-dest_name = 'Artifacts-' + platform_type
-
-dest_path = os.path.join(parent_dir, dest_name)
-dest_include_path = os.path.join(dest_path, 'include')
-dest_lib_path = os.path.join(dest_path, 'lib')
-
-if platform_type == 'Windows':
-    dxc_lib = 'dxcompiler.dll'
-    wrapper_name = 'dxcwrapper.dll'
-elif platform_type == 'Linux':
-    dxc_lib = 'libdxcompiler.so'
-    wrapper_name = 'libdxcwrapper.so'
+platforms = ["Windows", "Linux", "Darwin", "All"]
+architectures = ["aarch64", "x86_64"]
 
 
-if not os.path.exists(parent_dir):
-    print('Build directory \'' + parent_dir  + '\' does not exist')
+parser = argparse.ArgumentParser(description = 'Build DirectX Compiler wrapper into a shared library')
+parser.add_argument('-P', '--platform', dest = 'platform', required = False, help = 'Platform type- Can be [Windows, Linux, Darwin (MacOS), All]. Defaults to current platform.')
+parser.add_argument('-A', '--architecture', dest = 'architecture', required = False, help = 'Platform architecture- Can be [aarch64, x86_64]. Defaults to current architecture.')
+
+
+platform_type = parser.parse_args().platform or platform.system()
+platform_arch = parser.parse_args().architecture or platform.machine()
+
+
+def match_any(input, list):
+    return any(input == element for element in list)
+
+if not match_any(platform_type, platforms):
+    print(f"Platform '{platform_type}' does not match available platforms. Must be Windows, Linux, Darwin, or All.")
     exit()
 
-if not os.path.exists(dest_path):
-    if platform_type == 'Windows':
-        download_zip(dxc_win_build, parent_dir, dest_name)
-    elif platform_type == 'Linux':
-        download_tar_gz(dxc_lin_build, parent_dir, dest_name)
-    else:
-        print("Invalid platform: " + platform_type)
+if not match_any(platform_arch, architectures):
+    print(f"Architecture '{platform_arch}' does not match available architectures. Must be aarch64 or x86_64.")
+    exit()
 
 
-# create the output library path
-os.makedirs(parent_lib_path, exist_ok=True)
+print(f"Compiling for {platform_type} on {platform_arch} architecture.")
+
+
+def select_release(release):
+    name = release["name"]
+
+    # not the right release format
+    if not "ReleaseFast_lib.tar.gz" in name:
+        return False
+
+    # exclude musl binaries
+    if "musl" in name:
+        return False
+    
+    # ensure proper architecture
+    if not platform_arch in name:
+        return False
+    
+    if (platform_type == 'Windows' or platform_type == 'All') and 'windows-gnu' in name:
+        return True
+    
+    if (platform_type == 'Linux' or platform_type == 'All') and 'linux-gnu' in name:
+        return True
+
+    if (platform_type == 'Darwin' or platform_type == 'All') and 'macos-none' in name:
+        return True
+    
+    return False
+
+releases = gitreleases.get_latest_release('hexops', 'mach-dxcompiler')
+
+releases = [x for x in releases if select_release(x)]
+
+
+
+lib_path = os.path.join(dest_dir, 'library')
+os.makedirs(lib_path, exist_ok = True)
+
+wrapper_name = 'mach_dxc'
 
 # make a version of this that works on Windows since c++ compilers are a pain to get working on PowerShell
 clang_command = [ 'clang++' ]
 
-if (platform_type == 'Windows'):
-    clang_command.append('-target')
-    clang_command.append('x86_64-w64-mingw32')
-    clang_command.append('-D')
-    clang_command.append('_WIN32')
-
 clang_command.append('-shared')
-clang_command.append('-o')
-clang_command.append('library/' + wrapper_name)
 clang_command.append('-fPIC')
-clang_command.append('dxcwrapper.cpp')
-clang_command.append('-I' + dest_include_path)
-clang_command.append('-L' + dest_lib_path)
-clang_command.append('-ldxcompiler')
-clang_command.append('-Wl,-rpath=$ORIGIN')
+clang_command.append('-o')
+clang_command.append('library/')
+clang_command.append('mach_dxc.cpp')
+clang_command.append('-L')
+clang_command.append('-lmachdxcompiler')
+clang_command.append('-lc++')
 
-subprocess.run(clang_command, cwd=parent_dir, check=True)
 
-shutil.copy2(os.path.join(dest_lib_path, dxc_lib), os.path.join(parent_lib_path, dxc_lib))
+for release in releases:
+    name = release["name"]
+    folder_name = 'Unknown Platform'
+    platform_suffix = ''
+
+    if 'windows-gnu' in name:
+        folder_name = 'Artifacts-Windows'
+        platform_suffix = '.dll'
+    
+    if 'linux-gnu' in name:
+        folder_name = 'Artifacts-Linux'
+        platform_suffix = '.so'
+
+    if 'macos-none' in name:
+        folder_name = 'Artifacts-Darwin'
+        platform_suffix = '.dylib'
+
+    if 'aarch64' in name:
+        folder_name += '-ARM64'
+    elif 'x86_64' in name:
+        folder_name += '-x86_64'
+
+    gitreleases.download_release(release, dest_dir, folder_name, 'Compressed')
+
+    clang_command[4] = f"library/{wrapper_name}{platform_suffix}"
+    clang_command[6] = f"-L{folder_name}/"
+
+    print("Compiling")
+
+    subprocess.run(clang_command, cwd = dest_dir, check = True)

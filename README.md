@@ -4,14 +4,8 @@
 
 ### Baby's first .NET wrapper
 
-A wrapper for the DirectXShaderCompiler that does not use Windows-Specific COM interfaces<br><br>
+A wrapper for the mach fork of the DirectX Shader Compiler, which you can find [Here](https://github.com/hexops/mach-dxcompiler)<br><br>
 
-To Compile: Run build_deps.py to build DirectXShaderCompiler from source and expose a C-Style interface in the library<br><br>
-
-To use:<br>
-Create a new ShaderCompiler<br>
-Create a CompilerOptions object and set all the desired properties<br>
-Call ShaderCompiler.Compile() with the shader code and compiler options<br>
-Get outputs with the CompilationResult object that Compile() returns<br>
+To Compile: Run build.py to compile the shared objects that C# will access.<br><br>
 
 

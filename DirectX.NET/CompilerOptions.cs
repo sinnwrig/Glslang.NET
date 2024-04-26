@@ -9,7 +9,7 @@ public enum LanguageVersion { _2016, _2017, _2018, _2021 }
 
 public enum Linkage { Internal, External }
 
-public enum FlowControlMode{ Avoid, Prefer}
+public enum FlowControlMode { Avoid, Prefer}
 
 public enum DebugInfoType { Normal, Slim, Random }
 
@@ -18,27 +18,8 @@ public enum OptimizationLevel { O0, O1, O2, O3 }
 public enum MatrixPackMode { ColumnMajor, RowMajor }
 
 
-public class CompilerOptions
+public partial class CompilerOptions
 {
-    private enum AssignmentType { Equals, Spaced }
-
-
-    [AttributeUsage(AttributeTargets.Struct | AttributeTargets.Enum | AttributeTargets.Class | AttributeTargets.Field, AllowMultiple = true)]
-    private class CompilerOptionAttribute : Attribute
-    {
-        public string Name;
-        public int Value;
-        public AssignmentType Assignment;
-
-        public CompilerOptionAttribute(string name = "", int value = 0, AssignmentType assignment = AssignmentType.Spaced)
-        {
-            Name = name;
-            Assignment = assignment;
-            Value = value;
-        }
-    }
-
-
     // Compilation Options    
     [CompilerOption(name:"-all-resources-bound")]
     public bool allResourcesBound = false; // Enables agressive flattening
@@ -75,6 +56,21 @@ public class CompilerOptions
         {
             args.Add("-D");
             args.Add($"{macro.Key}={macro.Value}");
+        }
+    }
+
+
+    private HashSet<string> includePaths = new();
+
+    public void SetIncludePath(string path) => includePaths.Add(path); // Define an include path
+    public void RemoveIncludePath(string path) => includePaths.Remove(path); // Remove an include path
+
+    private void AddIncludePaths(List<string> args)
+    {
+        foreach (var path in includePaths)
+        {
+            args.Add("-I");
+            args.Add(path);
         }
     }
 
@@ -524,123 +520,5 @@ public class CompilerOptions
             string warnVal = warning.Value ? string.Empty : "no-";
             args.Add($"-W{warnVal}{warning.Key}");
         }
-    }
-
-
-// -----------------------------------------------------------
-// --------------       Argument Builder        --------------
-// -----------------------------------------------------------
-
-    // Cache reflection fields along with CompilerOptionAttribute
-    private static readonly Dictionary<string, (FieldInfo, CompilerOptionAttribute[])> fields; 
-    
-    static CompilerOptions()
-    {
-        fields = new();
-        foreach (FieldInfo fi in typeof(CompilerOptions).GetFields(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public))
-        {
-            CompilerOptionAttribute[] attribs = fi.GetCustomAttributes<CompilerOptionAttribute>().ToArray();
-
-            if (attribs.Length > 0)
-                fields[fi.Name] = (fi, attribs);
-        }
-    }
-
-    public CompilerOptions(ShaderProfile profile)
-    {
-        this.profile = profile;
-    }
-    
-
-    private void SetBoolOption(List<string> args, CompilerOptionAttribute[] options, bool value)
-    {
-        // Enable/Disable compiler option based on boolean 
-        if (options.Length < 2)
-        {
-            if (value)
-                args.Add(options[0].Name);
-            
-            return;
-        }
-
-        // Set compiler option based on true/false
-        if (value)
-            args.Add(options[0].Value == 1 ? options[0].Name : options[1].Name);
-        else
-            args.Add(options[0].Value == 0 ? options[0].Name : options[1].Name);
-    }   
-
-
-    private void SetStringOption(List<string> args, CompilerOptionAttribute option, string? str)
-    {
-        // String is empty but argument isn't null- add option only
-        if (string.IsNullOrWhiteSpace(str))
-        {
-            args.Add(option.Name);
-            return;  
-        } 
-
-        if (option.Assignment == AssignmentType.Equals)
-        {
-            args.Add($"{option.Name}={str.ToLower()}");
-            return;
-        }
-
-        args.Add(option.Name);
-        args.Add(str);
-    }
-
-
-    private void SetEnumOption(List<string> args, CompilerOptionAttribute[] options, Enum enumValue)
-    {
-        // Only one option- use enum as string value
-        if (options.Length == 1)
-        {
-            SetStringOption(args, options[0], enumValue.ToString().Remove('_'));
-            return;
-        }
-
-        // Find matching CompilerOption and add that to compiler args
-        int enumVal = Convert.ToInt32(enumValue);
-        CompilerOptionAttribute? matching = Array.Find(options, x => x.Value == enumVal);
-
-        if (matching == null)
-            return;
-        
-        args.Add(matching.Name);
-    }
-
-
-    private void AddOption(List<string> args, (FieldInfo, CompilerOptionAttribute[]) field)
-    {
-        object? nullableVal = field.Item1.GetValue(this);
-
-        if (nullableVal == null)
-            return;
-
-        object value = nullableVal;
-
-        if (value is bool boolValue)
-            SetBoolOption(args, field.Item2, boolValue);
-        else if (value is Enum enumValue)
-            SetEnumOption(args, field.Item2, enumValue);
-        else
-            SetStringOption(args, field.Item2[0], value.ToString());
-    }
-
-
-    public string[] GetArgumentsArray()
-    {
-        List<string> args = new List<string>();
-
-        foreach (var pair in fields)
-        {
-            AddOption(args, pair.Value);
-        }
-
-        AddMacros(args);
-        AddWarnings(args);
-
-        return args.ToArray();
     }
 }

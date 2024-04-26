@@ -10,6 +10,7 @@ public abstract class NativeResourceHandle : IDisposable
 
     public void Dispose()
     {
+        ReleaseHandle();
         GC.SuppressFinalize(this);
     }
 

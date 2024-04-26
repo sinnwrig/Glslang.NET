@@ -8,10 +8,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Update="DirectX/library/*.*">
+    <Content Include="DirectX/library/*.*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <!-- <Link>%(Filename)%(Extension)</Link> -->
-    </None>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Direct3D.DXC" Version="1.8.2403.24" />
   </ItemGroup>
 
 </Project>
