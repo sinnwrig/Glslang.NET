@@ -1,0 +1,3 @@
+[submodule "DXC/source"]
+	path = DXC/source
+	url = https://github.com/sinnwrig/mach-dxcompiler
