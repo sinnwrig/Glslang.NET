@@ -4,7 +4,7 @@ import platform
 platform_aliases = [
     {
         "platform": "macos",
-        "zig-build-alias": "macosx-none",
+        "zig-build-alias": "macos-none",
         "python-alias": "Darwin",
         "executable-ext": "",
         "compress-ext": ".tar.xz"
@@ -44,12 +44,12 @@ architecture_aliases = [
 
 
 
-def get_platform_aliases(any_name):
-    any_name = any_name.lower()
+def get_platform_alias(any_name):
+    any_name = str(any_name).lower()
     return next(x for x in platform_aliases if (any_name in x.values()))
 
-def get_architecture_aliases(any_name):
-    any_name = any_name.lower()
+def get_architecture_alias(any_name):
+    any_name = str(any_name).lower()
     return next(x for x in architecture_aliases if (any_name in x.values()))
 
     

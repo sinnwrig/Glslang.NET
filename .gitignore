@@ -1,4 +1,5 @@
 obj/
 bin/
-DXC/
+DXC/lib
+DXC/zig-installs/
 */__pycache__/

@@ -9,9 +9,9 @@ import utils.download
 from os import path
 
 
-def ensure_zig(version, download_url, install_path):
-    platform_alias = utils.platformver.get_platform_aliases(platform.system())
-    arch = utils.platformver.get_architecture_aliases(platform.machine())
+def ensure_zig(version, download_url, install_path, download_if_nexist = True, create_path = True):
+    platform_alias = utils.platformver.get_platform_alias(platform.system())
+    arch = utils.platformver.get_architecture_alias(platform.machine())
 
     zig_name = f"zig-{platform_alias['platform']}-{arch['zig-build-alias']}-{version}"
     zig_path = path.join(install_path, zig_name)
@@ -28,6 +28,12 @@ def ensure_zig(version, download_url, install_path):
         if sys_result.stdout is version:
             return 'zig'
     except:
+        if not download_if_nexist:
+            raise FileNotFoundError("Could not find a zig installation on the system!")
+
+        if create_path:
+            os.makedirs(install_path, exist_ok = True)
+
         # Download a local version
 
         zig_pkg_name = f"{zig_name}{platform_alias['compress-ext']}"
