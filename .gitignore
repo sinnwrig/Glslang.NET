@@ -1,5 +1,4 @@
 obj/
 bin/
-DirectX/
-Artifacts-*/
-__pycache__/
+DXC/
+*/__pycache__/
