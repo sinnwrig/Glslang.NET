@@ -86,7 +86,7 @@ public partial class CompilerOptions
 
     private void SetEnumOption(List<string> args, CompilerOptionAttribute[] options, Enum enumValue)
     {
-        // Only one option- use enum as string value
+        // Only one option- pass enum as string value
         if (options.Length == 1)
         {
             SetStringOption(args, options[0], enumValue.ToString().Remove('_'));

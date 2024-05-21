@@ -22,15 +22,11 @@ VertexOutput vertex(VertexInput input)
     return output;
 }
 
-#define DO_SOMETHING(x) x * 10 + 4 - 8 + sqrt(x) * mod(x) / abs(x) - pow(x * 100)
+#define DO_SOMETHING(x) x * 10 + 4 - 8 + sqrt(x) / abs(x)
 
 
 float4 pixel(VertexOutput input) : SV_Target
 {
-    const divFact = 100;
-
-    const notValid = 1
-
     float value = DO_SOMETHING(input.Color.r);
 
     float value2 = DO_SOMETHING(value);

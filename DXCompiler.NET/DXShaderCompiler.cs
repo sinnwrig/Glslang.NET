@@ -7,6 +7,8 @@ public delegate string FileIncludeHandler(string includeName);
 
 public class DXShaderCompiler : NativeResourceHandle
 {
+    private static void Main() { }
+
     internal delegate IntPtr DxcIncludeFunction(IntPtr context, IntPtr headerNameUtf8); 
 
     internal delegate int DxcFreeIncludeFunction(IntPtr context, IntPtr includeResult);
@@ -91,9 +93,14 @@ public class DXShaderCompiler : NativeResourceHandle
 
     public CompilationResult Compile(string code, CompilerOptions compilationOptions, FileIncludeHandler? includeHandler = null)
     {
+        return Compile(code, compilationOptions.GetArgumentsArray(), includeHandler);
+    }
+
+
+    public CompilationResult Compile(string code, string[] compilerArgs, FileIncludeHandler? includeHandler = null)
+    {
         byte[] codeUtf8 = NativeStringUtility.GetUTF8Bytes(code, false);
 
-        string[] compilerArgs = compilationOptions.GetArgumentsArray();
         IntPtr[] argsUtf8 = new IntPtr[compilerArgs.Length];
 
         for (int i = 0; i < argsUtf8.Length; i++)

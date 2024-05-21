@@ -2,18 +2,19 @@ using System.Runtime.InteropServices;
 
 namespace DXCompiler.NET;
 
-public struct PlatformInfo
+// Don't want to document this, so it's internal. This won't be used for shader compilation anyway, just to make loading the library easier.
+internal struct PlatformInfo
 {
-    public OSPlatform platform;
-    public Architecture architecture;
+    internal OSPlatform platform;
+    internal Architecture architecture;
 
-    public PlatformInfo(OSPlatform platform, Architecture architecture)
+    internal PlatformInfo(OSPlatform platform, Architecture architecture)
     {
         this.platform = platform;
         this.architecture = architecture;
     }
 
-    public static OSPlatform GetPlatform()
+    internal static OSPlatform GetPlatform()
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             return OSPlatform.OSX;
@@ -26,7 +27,7 @@ public struct PlatformInfo
         throw new Exception("Cannot determine operating system.");
     }
 
-    public static PlatformInfo GetCurrentPlatform()
+    internal static PlatformInfo GetCurrentPlatform()
     {
         return new PlatformInfo(GetPlatform(), RuntimeInformation.ProcessArchitecture);
     }

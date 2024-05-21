@@ -3,8 +3,37 @@ using System.Runtime.InteropServices;
 
 namespace DXCompiler.NET;
 
+
 internal static class DXCNative
 {
+    // Bundles platform and architecture for ease-of-use
+    private struct PlatformInfo
+    {
+        public OSPlatform platform;
+        public Architecture architecture;
+
+        public PlatformInfo(OSPlatform platform, Architecture architecture)
+        {
+            this.platform = platform;
+            this.architecture = architecture;
+        }
+
+        public static OSPlatform GetPlatform()
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                return OSPlatform.OSX;
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) 
+                return OSPlatform.Linux;
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) 
+                return OSPlatform.Windows;
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.FreeBSD))
+                return OSPlatform.FreeBSD;
+            throw new Exception("Cannot determine operating system.");
+        }
+
+        public static PlatformInfo GetCurrentPlatform() => new PlatformInfo(GetPlatform(), RuntimeInformation.ProcessArchitecture);
+    }
+
     const string LibName = "machdxcompiler";
 
     const string WinLib = LibName + ".dll";
@@ -51,14 +80,6 @@ internal static class DXCNative
         string relativeLibraryPath = LibraryPathDict[platform];        
 
         return NativeLibrary.Load(relativeLibraryPath, assembly, DllImportSearchPath.AssemblyDirectory | DllImportSearchPath.ApplicationDirectory);
-    }
-
-
-    [StructLayout(LayoutKind.Sequential)]
-    internal struct DXCIncludeResult
-    {
-        internal IntPtr headerData; // UTF-8 or null
-        internal nuint headerLength;
     }
 
     const CallingConvention cconv = CallingConvention.Cdecl;
