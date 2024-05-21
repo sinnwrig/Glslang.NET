@@ -2,7 +2,7 @@ namespace DXCompiler.NET;
 
 
 // The SafeHandle class in System.Runtime.InteropServices does something similar to this class, but implementing it was more annoying than making this simple wrapper.
-internal abstract class NativeResourceHandle : IDisposable
+public abstract class NativeResourceHandle : IDisposable
 {
     protected IntPtr handle;
 
