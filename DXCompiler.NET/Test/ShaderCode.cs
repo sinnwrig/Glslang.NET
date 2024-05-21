@@ -1,6 +1,6 @@
 public static class ShaderCode
 {
-    public const string HlslCode = """
+    public const string HlslCode = @"
 struct VertexInput
 {
     float2 Position : POSITION;
@@ -22,10 +22,9 @@ VertexOutput vertex(VertexInput input)
     return output;
 }
 
-
 float4 pixel(VertexOutput input) : SV_Target
 {
     return input.Color;
 }
-""";
+";
 }

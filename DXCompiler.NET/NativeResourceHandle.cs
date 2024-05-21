@@ -5,7 +5,7 @@ public abstract class NativeResourceHandle : IDisposable
 {
     protected IntPtr handle;
 
-    protected abstract bool ReleaseHandle();
+    protected abstract void ReleaseHandle();
 
 
     public void Dispose()
@@ -15,16 +15,14 @@ public abstract class NativeResourceHandle : IDisposable
     }
 
 
-    public IntPtr GetHandle() => handle;
-
-
     ~NativeResourceHandle()
     {
+        ConsoleColor prev = Console.ForegroundColor;
+        
         Console.ForegroundColor = ConsoleColor.Yellow;
-        Console.WriteLine($"Warning: Native handle for {GetType().Name} was not properly deallocated with a using statement.");
-        Console.ForegroundColor = ConsoleColor.White;
+        Console.WriteLine($"Warning: Native handle for {GetType().Name} was not properly deallocated. Ensure object is disposed by manually calling Dispose() or with a using statement.");
+        Console.ForegroundColor = prev;
 
         Dispose();
     }
-
 }

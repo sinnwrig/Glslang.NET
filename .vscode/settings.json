@@ -1,7 +1,11 @@
 {
     "files.exclude": {
-        "obj/": true,
+        "obj/": false,
         "bin/": false,
         "*/__pycache__": true
+    },
+
+    "files.associations": {
+        "*.inc": "cpp",
     }
 }

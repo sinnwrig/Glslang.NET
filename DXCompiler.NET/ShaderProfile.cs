@@ -43,7 +43,8 @@ public static class ShaderTypeExtensions
 
     public static string Abbreviation(this ShaderType type)
     {
-        return type switch {
+        return type switch 
+        {
             ShaderType.Vertex        => "vs",
             ShaderType.Pixel         => "ps",
             ShaderType.Domain        => "ds",
@@ -53,7 +54,7 @@ public static class ShaderTypeExtensions
             ShaderType.Library       => "lib",
             ShaderType.Geometry      => "gs",
             ShaderType.Compute       => "cs",
-            _ => "unknown"
+            _ => throw new ArgumentException($"Invalid ShaderType: {type}"),
         };
     }
 }
@@ -68,7 +69,7 @@ public class ShaderProfile
     private ushort subVersion = 0;
 
 
-    public ShaderProfile(ShaderType type, int version = -1, int subVersion = -1)
+    public ShaderProfile(ShaderType type, int version = 6, int subVersion = 0)
     {
         this.type = type;
         this.version = (ushort)version;
@@ -83,7 +84,6 @@ public class ShaderProfile
         if (!IsValid())
         {
             float minVersion = (float)type.MinimumVersion() / 10;
-
             throw new InvalidProfileException($"{type} shader is not compatible with shader model {version}.{subVersion}. Shader model must be a minimum of {minVersion:0.0}");
         }
     }
@@ -92,40 +92,25 @@ public class ShaderProfile
     public ShaderType Type
     {
         get => type;
-        set
-        {
-            type = value;
-        }
+        set => type = value;
     }
 
 
     public int Version
     {
         get => version;
-
-        set
-        {
-            version = (ushort)Math.Clamp(value, 6, 10);
-        }
+        set => version = (ushort)Math.Clamp(value, 6, 10);
     }
 
 
     public int SubVersion
     {
         get => subVersion;
-
-        set
-        {
-            // Sub-version can't go above 8.
-            subVersion = (ushort)Math.Clamp(value, 0, 8);
-        }
+        set => subVersion = (ushort)Math.Clamp(value, 0, 8);
     }
 
 
-    public override string ToString()
-    {
-        return $"{type.Abbreviation()}_{version}_{subVersion}";   
-    }
+    public override string ToString() => $"{type.Abbreviation()}_{version}_{subVersion}";  
 }
 
 

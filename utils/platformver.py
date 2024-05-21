@@ -43,13 +43,14 @@ architecture_aliases = [
 ]
 
 
-
-def get_platform_alias(any_name):
+def get_platform_alias(any_name, ensure = False):
     any_name = str(any_name).lower()
-    return next(x for x in platform_aliases if (any_name in x.values()))
+    return next((x for x in platform_aliases if (any_name in x.values())), None)
 
-def get_architecture_alias(any_name):
+
+def get_architecture_alias(any_name, ensure = False):
     any_name = str(any_name).lower()
-    return next(x for x in architecture_aliases if (any_name in x.values()))
+    return next((x for x in architecture_aliases if (any_name in x.values())), None)
+
 
     
