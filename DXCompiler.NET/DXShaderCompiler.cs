@@ -85,8 +85,10 @@ public class DXShaderCompiler : NativeResourceHandle
     }
 
 
-    public DXShaderCompiler()
+    public DXShaderCompiler(string[]? librarySearchPaths = null)
     {
+        DXCNative.ResolveAssemblies(librarySearchPaths);
+
         handle = DXCNative.machDxcInit();
     }
 

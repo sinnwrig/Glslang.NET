@@ -82,7 +82,7 @@ args = parser.parse_args()
 
 platform_args = args.platform or [ platform.system() ]
 arch_args = args.architecture or [ platform.machine() ]
-debug_symbols = (args.debug or 'Off') == 'On'
+debug_symbols = (args.debug or 'off').lower() == 'on'
 
 def ensure(array, options):
     if array == None or len(array) == 0 or array[0] == None:
