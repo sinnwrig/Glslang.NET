@@ -1,7 +1,7 @@
 using System.Text;
 using System.Runtime.InteropServices;
 
-namespace DXCompiler.NET;
+namespace Glslang.NET;
 
 
 public static class NativeStringUtility
@@ -19,10 +19,10 @@ public static class NativeStringUtility
 
     private static string Sanitize(string str, bool nullTerminate)
     {
-        if (!nullTerminate)
-            return str;
+        if (nullTerminate && str[^1] != '\0')
+            return str + '\0';
 
-        return str[^1] == '\0' ? str : str + '\0';
+        return str;
     }
 
 
@@ -55,15 +55,15 @@ public static class NativeStringUtility
     }
 
 
-    public static IntPtr GetASCIIPtr(string str, out uint len, bool nullTerminate = true) => 
+    public static IntPtr AllocASCIIPtr(string str, out uint len, bool nullTerminate = true) => 
         AllocBytePtr(GetASCIIBytes(str, nullTerminate), out len);
 
-    public static IntPtr GetUTF8Ptr(string str, out uint len, bool nullTerminate = true) => 
+    public static IntPtr AllocUTF8Ptr(string str, out uint len, bool nullTerminate = true) => 
         AllocBytePtr(GetUTF8Bytes(str, nullTerminate), out len);
 
-    public static IntPtr GetUTF16Ptr(string str, out uint len, bool nullTerminate = true, bool bigEndian = false) => 
+    public static IntPtr AllocUTF16Ptr(string str, out uint len, bool nullTerminate = true, bool bigEndian = false) => 
         AllocBytePtr(GetUTF16Bytes(str, nullTerminate, bigEndian), out len);
 
-    public static IntPtr GetUTF32Ptr(string str, out uint len, bool nullTerminate = true) => 
+    public static IntPtr AllocUTF32Ptr(string str, out uint len, bool nullTerminate = true) => 
         AllocBytePtr(GetUTF32Bytes(str, nullTerminate), out len);
 }

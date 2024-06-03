@@ -10,41 +10,41 @@
 
 
     <PropertyGroup>
-        <PackageId>DXCompiler.NET</PackageId>
+        <PackageId>Glslang.NET</PackageId>
         <Version>0.1.0</Version>
         <Authors>Kai Angulo</Authors>
         <Owners>Kai Angulo</Owners>
-        <Description>A .NET Wrapper for the DirectX Shader Compiler</Description>
+        <Description>A .NET Wrapper for Khronos Group's glslang compiler</Description>
         <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     </PropertyGroup>
 
     <ItemGroup>
-        <Content Include="../DXC/lib/windows-x86_64/lib/*.dll">
+        <Content Include="../glslang/lib/windows-x86_64/lib/*.dll">
             <Pack>true</Pack>
             <PackagePath>runtimes/win-x64/native</PackagePath>
         </Content>
     
-        <Content Include="../DXC/lib/windows-arm64/lib/*.dll">
+        <Content Include="../glslang/lib/windows-arm64/lib/*.dll">
             <Pack>true</Pack>
             <PackagePath>runtimes/win-arm64/native</PackagePath>
         </Content>
     
-        <Content Include="../DXC/lib/linux-x86_64/lib/*.so">
+        <Content Include="../glslang/lib/linux-x86_64/lib/*.so">
             <Pack>true</Pack>
             <PackagePath>runtimes/linux-x64/native</PackagePath>
         </Content>
     
-        <Content Include="../DXC/lib/linux-arm64/lib/*.so">
+        <Content Include="../glslang/lib/linux-arm64/lib/*.so">
             <Pack>true</Pack>
             <PackagePath>runtimes/linux-arm64/native</PackagePath>
         </Content>
   
-        <Content Include="../DXC/lib/macos-x86_64/lib/*.dylib">
+        <Content Include="../glslang/lib/macos-x86_64/lib/*.dylib">
             <Pack>true</Pack>
             <PackagePath>runtimes/osx-x64/native</PackagePath>
         </Content>
   
-        <Content Include="../DXC/lib/macos-arm64/lib/*.dylib">
+        <Content Include="../glslang/lib/macos-arm64/lib/*.dylib">
             <Pack>true</Pack>
             <PackagePath>runtimes/osx-arm64/native</PackagePath>
         </Content>

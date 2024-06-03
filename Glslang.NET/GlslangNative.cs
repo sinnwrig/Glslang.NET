@@ -1,10 +1,10 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
 
-namespace DXCompiler.NET;
+namespace Glslang.NET;
 
 
-internal static class DXCNative
+internal static class GlslangNative
 {
     // Bundles platform and architecture for ease-of-use
     private struct PlatformInfo
@@ -34,7 +34,7 @@ internal static class DXCNative
         public static PlatformInfo GetCurrentPlatform() => new PlatformInfo(GetPlatform(), RuntimeInformation.ProcessArchitecture);
     }
 
-    const string LibName = "machdxcompiler";
+    const string LibName = "glslang";
 
     const string WinLib = LibName + ".dll";
     const string OSXLib = "lib" + LibName + ".dylib";
@@ -56,7 +56,7 @@ internal static class DXCNative
     };
 
 
-    private static bool _assembliesResolved;
+    private static bool _assembliesResolved = false;
     private static string[]? additionalSearchPaths;
 
 
@@ -65,7 +65,7 @@ internal static class DXCNative
         if (_assembliesResolved)
             return;
 
-        DXCNative.additionalSearchPaths = additionalSearchPaths;
+        GlslangNative.additionalSearchPaths = additionalSearchPaths;
 
         NativeLibrary.SetDllImportResolver(Assembly.GetExecutingAssembly(), DllImportResolver);
 
@@ -123,54 +123,118 @@ internal static class DXCNative
                 bestPath = filePath;
         }
 
-        return NativeLibrary.Load(bestPath, assembly, DllImportSearchPath.AssemblyDirectory | DllImportSearchPath.ApplicationDirectory);
+        IntPtr library = NativeLibrary.Load(bestPath, assembly, DllImportSearchPath.AssemblyDirectory | DllImportSearchPath.ApplicationDirectory);
+
+        if (library == IntPtr.Zero)
+            throw new DllNotFoundException("Could not find Glslang shared library");
+
+        return library;
     }
 
     const CallingConvention cconv = CallingConvention.Cdecl;
 
 
-    [DllImport(LibName, CallingConvention = cconv)]
-    internal static extern IntPtr machDxcInit();
 
     [DllImport(LibName, CallingConvention = cconv)]
-    internal static extern void machDxcDeinit(IntPtr compiler);
+    internal static extern int glslang_initialize_process();
 
     [DllImport(LibName, CallingConvention = cconv)]
-    internal static extern IntPtr machDxcCompile(
-        IntPtr compilerPtr, 
-        IntPtr codePtr, 
-        nuint codeLength, 
-        IntPtr argsPtr, 
-        nuint argsLength,
-        IntPtr includerPtr);
+    internal static extern void glslang_finalize_process();
 
+
+    // glslang_shader_t
 
     [DllImport(LibName, CallingConvention = cconv)]
-    internal static extern IntPtr machDxcCompileResultGetError(IntPtr resultPtr);
+    internal static extern IntPtr glslang_shader_create(IntPtr input);
 
     [DllImport(LibName, CallingConvention = cconv)]
-    internal static extern IntPtr machDxcCompileResultGetObject(IntPtr resultPtr);
+    internal static extern void glslang_shader_delete(IntPtr shader);
 
-    [DllImport(LibName, CallingConvention = cconv)]
-    internal static extern void machDxcCompileResultDeinit(IntPtr resultPtr);
 
 
     [DllImport(LibName, CallingConvention = cconv)]
-    internal static extern IntPtr machDxcCompileObjectGetBytes(IntPtr objectPtr);
+    internal static extern void glslang_shader_set_preamble(IntPtr shader, IntPtr preamble);
 
     [DllImport(LibName, CallingConvention = cconv)]
-    internal static extern nuint machDxcCompileObjectGetBytesLength(IntPtr objectPtr);
+    internal static extern void glslang_shader_shift_binding(IntPtr shader, ResourceType res, uint shiftBase);
 
     [DllImport(LibName, CallingConvention = cconv)]
-    internal static extern void machDxcCompileObjectDeinit(IntPtr objectPtr);
+    internal static extern void glslang_shader_shift_binding_for_set(IntPtr shader, ResourceType res, uint shiftBase, uint set);
+
+    [DllImport(LibName, CallingConvention = cconv)]
+    internal static extern void glslang_shader_set_options(IntPtr shader, ShaderOptions options);
+
+    [DllImport(LibName, CallingConvention = cconv)]
+    internal static extern void glslang_shader_set_glsl_version(IntPtr shader, int version);
+
+    [DllImport(LibName, CallingConvention = cconv)]
+    internal static extern int glslang_shader_preprocess(IntPtr shader, IntPtr input);
+
+    [DllImport(LibName, CallingConvention = cconv)]
+    internal static extern int glslang_shader_parse(IntPtr shader, IntPtr input);
+
+    [DllImport(LibName, CallingConvention = cconv)]
+    internal static extern IntPtr glslang_shader_get_preprocessed_code(IntPtr shader);
+
+    [DllImport(LibName, CallingConvention = cconv)]
+    internal static extern IntPtr glslang_shader_get_info_log(IntPtr shader);
+
+    [DllImport(LibName, CallingConvention = cconv)]
+    internal static extern IntPtr glslang_shader_get_info_debug_log(IntPtr shader);
+
+
+    // glslang_program_t
+
+    [DllImport(LibName, CallingConvention = cconv)]
+    internal static extern IntPtr glslang_program_create();
+
+    [DllImport(LibName, CallingConvention = cconv)]
+    internal static extern void glslang_program_delete(IntPtr program);
+
 
 
     [DllImport(LibName, CallingConvention = cconv)]
-    internal static extern IntPtr machDxcCompileErrorGetString(IntPtr errorPtr);
+    internal static extern void glslang_program_add_shader(IntPtr program, IntPtr shader);
 
     [DllImport(LibName, CallingConvention = cconv)]
-    internal static extern nuint machDxcCompileErrorGetStringLength(IntPtr errorPtr);
+    internal static extern int glslang_program_link(IntPtr program, MessageType messages); 
 
     [DllImport(LibName, CallingConvention = cconv)]
-    internal static extern void machDxcCompileErrorDeinit(IntPtr errorPtr);
+    internal static extern void glslang_program_add_source_text(IntPtr program, ShaderStage stage, IntPtr text, nuint len);
+    
+    [DllImport(LibName, CallingConvention = cconv)]
+    internal static extern void glslang_program_set_source_file(IntPtr program, ShaderStage stage, IntPtr file);
+
+    [DllImport(LibName, CallingConvention = cconv)]
+    internal static extern int glslang_program_map_io(IntPtr program);
+
+
+    // SPIR-V generation
+
+    [DllImport(LibName, CallingConvention = cconv)]
+    internal static extern void glslang_program_SPIRV_generate(IntPtr program, ShaderStage stage);
+
+    [DllImport(LibName, CallingConvention = cconv)]
+    internal static extern void glslang_program_SPIRV_generate_with_options(IntPtr program, ShaderStage stage, IntPtr spvOptions);
+
+    [DllImport(LibName, CallingConvention = cconv)]
+    internal static extern nuint glslang_program_SPIRV_get_size(IntPtr program);
+
+    [DllImport(LibName, CallingConvention = cconv)]
+    internal static extern void glslang_program_SPIRV_get(IntPtr program, [Out] byte[] buffer); // Output type is actually uint, so buffer must be 4x the size
+
+    [DllImport(LibName, CallingConvention = cconv)]
+    internal static extern IntPtr glslang_program_SPIRV_get_ptr(IntPtr program); // Allocates a buffer we have to free. Prefer SPIRV_get to this.
+
+    [DllImport(LibName, CallingConvention = cconv)]
+    internal static extern IntPtr glslang_program_SPIRV_get_messages(IntPtr program);
+
+    [DllImport(LibName, CallingConvention = cconv)]
+    internal static extern IntPtr glslang_program_get_info_log(IntPtr program);
+
+    [DllImport(LibName, CallingConvention = cconv)]
+    internal static extern IntPtr glslang_program_get_info_debug_log(IntPtr program);
+
+    [DllImport(LibName, CallingConvention = cconv)]
+    internal static extern IntPtr glslang_SPIRV_disassemble([In] byte[] spvWords, nuint spvWordsLen); // Input type is actually uint, so words length must be 1/4 the size
 }

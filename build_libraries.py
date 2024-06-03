@@ -6,21 +6,17 @@ import subprocess
 import argparse
 import shutil
 
-import utils.github
-import utils.zigrunner
 import utils.platformver
 
 from os import path
 
-platforms = ["windows-gnu", "linux-gnu", "macos-none"]
-architectures = ["aarch64", "x86_64"]
+platforms = utils.platformver.platforms('zig-build-alias')
+architectures = utils.platformver.architectures('zig-build-alias')
 
 def match_any(input, list):
     return any(input == element for element in list)
 
-# NOTE: Zig path is relative to current working directory.
-# NOTE: The source path must contain a build.zig file, and the output path is relative to source path. 
-def build(zig_path, src_path, output_path, is_shared, is_spirv, architecture, platform, cpu_specific = None, clear_cache = True, debug_symbols = False):
+def build(src_path, output_path, is_shared, architecture, platform, cpu_specific = None, clear_cache = True, debug_symbols = False):
     zig_cache_dir = path.join(src_path, 'zig-cache')
 
     if clear_cache and path.isdir(zig_cache_dir):
@@ -32,20 +28,17 @@ def build(zig_path, src_path, output_path, is_shared, is_spirv, architecture, pl
     if not match_any(architecture, architectures):
         raise Exception(f"Invalid architecture '{platform}'. Must be one of the following: {architectures}.")
 
-    print(f"Compiling for {architecture}-{platform}. SPIR-V support: {is_spirv}. Shared Library: {is_shared}. Output directory: {output_path}")
+    print(f"Compiling for {architecture}-{platform}. Shared Library: {is_shared}. Output directory: {output_path}")
 
     zig_cmd = [
-        zig_path, 'build',
+        'zig', 'build',
         '-p', output_path,
-        '-Dshared', '-Dspirv',
-        '-Doptimize=ReleaseFast',
-        '-Dfrom_source',
-        '-Dskip_executables',
+        '-Dshared', '-Doptimize=ReleaseFast',
         f'-Dtarget={architecture}-{platform}'
     ]
 
     if debug_symbols:
-        zig_cmd.append("-Ddebug_symbols")
+        zig_cmd.append("-Ddebug")
 
     if cpu_specific is not None:
         zig_cmd.append(f'-Dcpu={cpu_specific}')
@@ -62,18 +55,33 @@ cwd = os.getcwd()
 def full_path(relative_path):
     return path.join(cwd, relative_path)
 
-dxc = 'DXC'
-dxc_zig = path.join(dxc, 'zig-installs')
-dxc_src = path.join(dxc, 'source')
-dxc_lib = path.join(dxc, 'lib')
-ver = '0.12.0-dev.3180+83e578a18'
+glslang = 'glslang'
+glslang_src = path.join(glslang, 'source')
+glslang_lib = path.join(glslang, 'lib')
 
-if len(os.listdir(full_path(dxc_src))) == 0:
-    print("Dxcompiler source directory is empty! Please ensure this repository was cloned with `--recurse-submodules`, or run `git submodule update --init --recursive`.")
+version = '0.12.0'
 
-zig_path = utils.zigrunner.ensure_zig(ver, 'https://pkg.machengine.org/zig/', install_path = full_path(dxc_zig))
+# Ensure a copy of glslang exists
+if len(os.listdir(full_path(glslang_src))) == 0:
+    print("glslang source directory is empty! Please ensure this repository was cloned with `--recurse-submodules`, or run `git submodule update --init --recursive`.")
 
-parser = argparse.ArgumentParser(prog = 'Build DirectXCompiler', description = 'Build and compile DXC libraries')
+# Ensure the correct zig version (if any) is installed on the system
+try: 
+    sys_result = subprocess.run([ 'zig', 'version'], check = True, capture_output = True, text = True)
+    res_strip = sys_result.stdout.rstrip()
+
+    if res_strip != version:
+        print(f"Invalid zig version: {res_strip}. Please install zig version {version}")
+        exit(1)
+except subprocess.CalledProcessError:
+    print("Could not run `zig version`. Is zig installed on the system?")
+    exit(1)
+
+# ---------------
+# Parse arguments
+# ---------------
+
+parser = argparse.ArgumentParser(prog = 'Build glslang', description = 'Build and compile glslang libraries')
 parser.add_argument('-P', '--platform', nargs = '+', dest = 'platform', required = False)
 parser.add_argument('-A', '--architecture', nargs = '+', dest = 'architecture', required = False)
 parser.add_argument('-D', '--debug', dest = 'debug', required = False)
@@ -83,6 +91,7 @@ args = parser.parse_args()
 platform_args = args.platform or [ platform.system() ]
 arch_args = args.architecture or [ platform.machine() ]
 debug_symbols = (args.debug or 'off').lower() == 'on'
+
 
 def ensure(array, options):
     if array == None or len(array) == 0 or array[0] == None:
@@ -97,6 +106,7 @@ if len(platform_args) == 1 and str(platform_args[0]).lower() == 'all':
 else:
     platform_aliases = [ utils.platformver.get_platform_alias(x) for x in platform_args ]
 
+# Make sure we have at least 1 target platform
 ensure(platform_aliases, platform_args)
 
 if len(arch_args) == 1 and str(arch_args[0]).lower() == 'all':
@@ -104,7 +114,16 @@ if len(arch_args) == 1 and str(arch_args[0]).lower() == 'all':
 else:
     arch_aliases = [ utils.platformver.get_architecture_alias(x) for x in arch_args ]
 
+# Make sure we have at least 1 target architecture
 ensure(arch_aliases, arch_args)
+
+# -------------
+# Build sources
+# -------------
+
+print('Updating glslang sources:')
+
+subprocess.run([ 'python3', './update_glslang_sources.py', '--site', 'zig' ], cwd = full_path('glslang/source'), check = True)
 
 print('Building:')
 
@@ -117,6 +136,6 @@ for p_alias in platform_aliases:
         pname = p_alias['zig-build-alias']
         aname = a_alias['zig-build-alias']
 
-        output_path = full_path(path.join(dxc_lib, f"{p_alias['platform']}-{a_alias['architecture']}"))
+        output_path = full_path(path.join(glslang_lib, f"{p_alias['platform']}-{a_alias['architecture']}"))
         
-        build(zig_path, full_path(dxc_src), output_path, True, True, aname, pname, clear_cache = True)
+        build(full_path(glslang_src), output_path, True, aname, pname)
