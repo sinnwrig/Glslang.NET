@@ -1,6 +1,7 @@
 # Glslang.NET: cross-platform C# wrapper for Khronos Group's glslang HLSL/GLSL compiler.
 
 A cross-platform .NET wrapper written in C# to enable generating SPIR-V from GLSL/HLSL using Khronos' glslang compiler.
+
 # Usage
 
 This project wraps functionality from glslang into managed classes, which can be used to compile shader code with various options in a similar fashion to the native glslang interface.<br>
@@ -59,13 +60,10 @@ float4 pixel(Input input) : SV_Target
             defaultProfile = ShaderProfile.None,
             forceDefaultVersionAndProfile = false,
             forwardCompatible = false,
-            messages = MessageType.Default,
-            resourceLimits = ResourceLimits.DefaultResource,
             fileIncluder = IncludeFunction
         };
 
         Shader shader = context.CreateShader(input);
-
         
         if (!shader.Preprocess())	
         {
@@ -118,7 +116,7 @@ To support cross-platform compilation and to simplify the native build process, 
 
 ## Building Native Libraries
 
-To build native libraries, run build_libraries.py, specicying the target architecture with -A [x86_64, arm64, all] and your target platform with -P [windows, linux, macos, all].<br>If the command is being run for the first time, it will pull the glslang-zig source repository.
+To build native libraries, run build_libraries.py, specicying the target architecture with -A [x86_64, arm64, all] and the target platform with -P [windows, linux, macos, all].<br>If the command is being run for the first time, it will download the glslang-zig source repository and any sub-dependencies.
 
 Native build requirements:
 - Zig version 0.13.0 or higher.
