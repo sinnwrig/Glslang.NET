@@ -84,7 +84,6 @@ float4 pixel(VertexOutput input) : SV_Target
         };
 
         Shader shader = context.CreateShader(input);
-
         
         if (!shader.Preprocess())	
         {

@@ -11,6 +11,9 @@ namespace Glslang.NET;
 /// </remarks>
 public class CompilationContext : IDisposable
 {
+    static void Main() { } 
+    
+
     private readonly List<Shader> activeShaders = new();
     private readonly List<Program> activePrograms = new();
 
