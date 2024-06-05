@@ -45,16 +45,16 @@ internal struct CompilationInputNative
         nativeInput.defaultProfile = input.defaultProfile;
         nativeInput.forceDefaultVersionAndProfile = input.forceDefaultVersionAndProfile ? 1 : 0;
         nativeInput.forwardCompatible = input.forwardCompatible ? 1 : 0;
-        nativeInput.messages = input.messages;
+        nativeInput.messages = input.messages ?? MessageType.Default;
 
         // Allocate resource limits
         nativeInput.resource = Marshal.AllocHGlobal(Marshal.SizeOf<ResourceLimits>());
-        Marshal.StructureToPtr(input.resourceLimits, nativeInput.resource, false);
+        Marshal.StructureToPtr(input.resourceLimits ?? ResourceLimits.DefaultResource, nativeInput.resource, false);
 
         nativeInput.callbacks.includeLocal = IncludeCallbacksNative.LocalFuncPtr;
         nativeInput.callbacks.includeSystem = IncludeCallbacksNative.SystemFuncPtr;
         nativeInput.callbacks.freeIncludeResult = IncludeCallbacksNative.FreeFuncPtr;
-        nativeInput.callbacksCtx = Marshal.GetFunctionPointerForDelegate(input.fileIncluder);
+        nativeInput.callbacksCtx = input.fileIncluder != null ? Marshal.GetFunctionPointerForDelegate(input.fileIncluder) : IntPtr.Zero;
 
         // Allocate compiler input
         IntPtr inputPtr = Marshal.AllocHGlobal(Marshal.SizeOf<CompilationInputNative>());

@@ -18,17 +18,6 @@ float4 pixel(Input input) : SV_Target
 }
 ";
 
-    static IncludeResult IncludeFunction(string headerName, string includerName, uint depth, bool isSystemFile)
-    {
-        Console.WriteLine($"Including a {(isSystemFile ? "system" : "local")} file, `{headerName}` from `{includerName}` at depth {depth}.");
-        IncludeResult result;
-
-        result.headerData = $"// Included file {headerName}";
-        result.headerName = headerName;
-        
-        return result;
-    }
-
     static void Main()
     {
         using CompilationContext context = new CompilationContext();
@@ -48,8 +37,6 @@ float4 pixel(Input input) : SV_Target
             forceDefaultVersionAndProfile = false,
             forwardCompatible = false,
             messages = MessageType.Default,
-            resourceLimits = ResourceLimits.DefaultResource,
-            fileIncluder = IncludeFunction
         };
 
         Shader shader = context.CreateShader(input);

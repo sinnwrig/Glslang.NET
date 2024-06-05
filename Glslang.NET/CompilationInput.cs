@@ -86,7 +86,7 @@ public struct CompilationInput
     /// <summary>
     /// Enabled shader log and debug message outputs.
     /// </summary>
-    public MessageType messages;
+    public MessageType? messages;
 
     /// <summary>
     /// The resource limits imposed on a shader.
@@ -99,7 +99,7 @@ public struct CompilationInput
     /// <summary>
     /// Overrides default file inclusion behavior when the compiler encounters an `#include` directive.
     /// </summary>
-    public FileIncluder fileIncluder;
+    public FileIncluder? fileIncluder;
 }
 
 

@@ -2,7 +2,7 @@
 
 namespace Application;
 
-public class Program
+public static class MainProgram
 {        
     const string fragmentSource = @"
 #include ""./SomeFile.hlsl""
@@ -80,8 +80,6 @@ float4 pixel(VertexOutput input) : SV_Target
             defaultProfile = ShaderProfile.None,
             forceDefaultVersionAndProfile = false,
             forwardCompatible = false,
-            messages = MessageType.Default,
-            resourceLimits = ResourceLimits.DefaultResource,
             fileIncluder = IncludeFunction
         };
 
