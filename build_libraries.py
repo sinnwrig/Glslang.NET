@@ -6,12 +6,13 @@ import subprocess
 import argparse
 import shutil
 
-import utils.platformver
+import utils.github as github
+import utils.platformver as platformver
 
 from os import path
 
-platforms = utils.platformver.platforms('zig-build-alias')
-architectures = utils.platformver.architectures('zig-build-alias')
+platforms = platformver.platforms('zig-build-alias')
+architectures = platformver.architectures('zig-build-alias')
 
 def match_any(input, list):
     return any(input == element for element in list)
@@ -61,10 +62,6 @@ glslang_lib = path.join(glslang, 'lib')
 
 version = 'any'
 
-# Ensure a copy of glslang exists
-if len(os.listdir(full_path(glslang_src))) == 0:
-    print("glslang source directory is empty! Please ensure this repository was cloned with `--recurse-submodules`, or run `git submodule update --init --recursive`.")
-
 # Ensure the correct zig version (if any) is installed on the system
 try: 
     sys_result = subprocess.run([ 'zig', 'version'], check = True, capture_output = True, text = True)
@@ -102,17 +99,17 @@ platform_aliases = None
 arch_aliases = None 
 
 if len(platform_args) == 1 and str(platform_args[0]).lower() == 'all':
-    platform_aliases = utils.platformver.platform_aliases
+    platform_aliases = platformver.platform_aliases
 else:
-    platform_aliases = [ utils.platformver.get_platform_alias(x) for x in platform_args ]
+    platform_aliases = [ platformver.get_platform_alias(x) for x in platform_args ]
 
 # Make sure we have at least 1 target platform
 ensure(platform_aliases, platform_args)
 
 if len(arch_args) == 1 and str(arch_args[0]).lower() == 'all':
-    arch_aliases = utils.platformver.architecture_aliases
+    arch_aliases = platformver.architecture_aliases
 else:
-    arch_aliases = [ utils.platformver.get_architecture_alias(x) for x in arch_args ]
+    arch_aliases = [ platformver.get_architecture_alias(x) for x in arch_args ]
 
 # Make sure we have at least 1 target architecture
 ensure(arch_aliases, arch_args)
@@ -122,6 +119,8 @@ ensure(arch_aliases, arch_args)
 # -------------
 
 print('Updating glslang sources:')
+
+clone_repo('sinnwrig', 'glslang-zig', 'glslang/source')
 
 subprocess.run([ 'python3', './update_glslang_sources.py', '--site', 'zig' ], cwd = full_path('glslang/source'), check = True)
 

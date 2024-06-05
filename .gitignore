@@ -1,5 +1,5 @@
 obj/
 bin/
-glslang/lib
-glslang/zig-installs/
+glslang/
+glslang/
 */__pycache__/

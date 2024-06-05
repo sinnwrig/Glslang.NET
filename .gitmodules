@@ -1,3 +1,0 @@
-[submodule "glslang/source"]
-	path = glslang/source
-	url = https://github.com/sinnwrig/glslang-zig
