@@ -16,13 +16,13 @@ public class Shader
     internal Shader(CompilationInput input)
     {
         compilerInputPtr = CompilationInputNative.GetPtrForCompilationInput(input);
-        shaderPtr = GlslangNative.glslang_shader_create(compilerInputPtr);
+        shaderPtr = GlslangNative.CreateShader(compilerInputPtr);
     }
 
 
     internal void Release()
     {
-        GlslangNative.glslang_shader_delete(shaderPtr);
+        GlslangNative.DeleteShader(shaderPtr);
         CompilationInputNative.ReleasePtrForCompilationInput(compilerInputPtr);
     }
 
@@ -31,32 +31,32 @@ public class Shader
     public void SetPreamble(string preamble)
     {
         IntPtr preamblePtr = NativeStringUtility.AllocUTF8Ptr(preamble, out _, true);
-        GlslangNative.glslang_shader_set_preamble(shaderPtr, preamblePtr);
+        GlslangNative.SetShaderPreamble(shaderPtr, preamblePtr);
         Marshal.FreeHGlobal(preamblePtr);
     }
 
 
     public void ShiftBinding(ResourceType resourceType, uint shiftBase)
     {
-        GlslangNative.glslang_shader_shift_binding(shaderPtr, resourceType, shiftBase);
+        GlslangNative.ShiftShaderBinding(shaderPtr, resourceType, shiftBase);
     }
 
 
     public void ShiftBindingForSet(ResourceType resourceType, uint shiftBase, uint set)
     {
-        GlslangNative.glslang_shader_shift_binding_for_set(shaderPtr, resourceType, shiftBase, set);
+        GlslangNative.ShiftShaderBindingForSet(shaderPtr, resourceType, shiftBase, set);
     }
 
 
     public void SetOptions(ShaderOptions options)
     {
-        GlslangNative.glslang_shader_set_options(shaderPtr, options);
+        GlslangNative.SetShaderOptions(shaderPtr, options);
     }
 
 
     public void SetGLSLVersion(int version)
     {
-        GlslangNative.glslang_shader_set_glsl_version(shaderPtr, version);
+        GlslangNative.SetShaderGLSLVersion(shaderPtr, version);
     }
 
     
@@ -65,7 +65,7 @@ public class Shader
 
     public bool Preprocess()
     {
-        int result = GlslangNative.glslang_shader_preprocess(shaderPtr, compilerInputPtr);
+        int result = GlslangNative.PreprocessShader(shaderPtr, compilerInputPtr);
         isPreprocessed = true;
         return result == 1; // Success
     }
@@ -73,7 +73,7 @@ public class Shader
 
     public bool Parse()
     {
-        return GlslangNative.glslang_shader_parse(shaderPtr, compilerInputPtr) == 1; // Success
+        return GlslangNative.ParseShader(shaderPtr, compilerInputPtr) == 1; // Success
     }
 
     
@@ -88,21 +88,21 @@ public class Shader
             );
         }
 
-        IntPtr preprocessedCodePtr = GlslangNative.glslang_shader_get_preprocessed_code(shaderPtr);
+        IntPtr preprocessedCodePtr = GlslangNative.GetPreprocessedShaderCode(shaderPtr);
         return DeallocString(preprocessedCodePtr);
     }
 
 
     public string GetInfoLog()
     {
-        IntPtr infoLogPtr = GlslangNative.glslang_shader_get_info_debug_log(shaderPtr);
+        IntPtr infoLogPtr = GlslangNative.GetShaderInfoDebugLog(shaderPtr);
         return DeallocString(infoLogPtr);
     }
 
 
     public string GetDebugLog()
     {
-        IntPtr debugLogPtr = GlslangNative.glslang_shader_get_info_log(shaderPtr);
+        IntPtr debugLogPtr = GlslangNative.GetShaderInfoLog(shaderPtr);
         return DeallocString(debugLogPtr);
     }
 

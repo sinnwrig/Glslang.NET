@@ -19,12 +19,12 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Content Include="../glslang/lib/windows-x86_64/lib/*.dll">
+        <Content Include="../glslang/lib/windows-x86_64/bin/*.dll">
             <Pack>true</Pack>
             <PackagePath>runtimes/win-x64/native</PackagePath>
         </Content>
     
-        <Content Include="../glslang/lib/windows-arm64/lib/*.dll">
+        <Content Include="../glslang/lib/windows-arm64/bin/*.dll">
             <Pack>true</Pack>
             <PackagePath>runtimes/win-arm64/native</PackagePath>
         </Content>

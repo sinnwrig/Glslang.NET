@@ -12,33 +12,33 @@ public class ShaderProgram
 
     internal ShaderProgram()
     {
-        programPtr = GlslangNative.glslang_program_create();
+        programPtr = GlslangNative.CreateProgram();
     }
 
 
     internal void Release()
     {
-        GlslangNative.glslang_program_delete(programPtr);
+        GlslangNative.DeleteProgram(programPtr);
     }
 
 
 
     public void AddShader(Shader shader)
     {
-        GlslangNative.glslang_program_add_shader(programPtr, shader.shaderPtr);
+        GlslangNative.AddShaderToProgram(programPtr, shader.shaderPtr);
     }
     
 
     public bool Link(MessageType messages)
     {
-        return GlslangNative.glslang_program_link(programPtr, messages) == 1;
+        return GlslangNative.LinkProgram(programPtr, messages) == 1;
     }
     
 
     public void AddSourceText(ShaderStage stage, string text)
     {
         IntPtr textPtr = NativeStringUtility.AllocUTF8Ptr(text, out uint length, false);
-        GlslangNative.glslang_program_add_source_text(programPtr, stage, textPtr, (nuint)length);
+        GlslangNative.AddProgramSourceText(programPtr, stage, textPtr, (nuint)length);
         Marshal.FreeHGlobal(textPtr);
     }
     
@@ -46,14 +46,14 @@ public class ShaderProgram
     public void SetSourceFile(ShaderStage stage, string file)
     {
         IntPtr filePtr = NativeStringUtility.AllocUTF8Ptr(file, out _, true);
-        GlslangNative.glslang_program_set_source_file(programPtr, stage, filePtr);
+        GlslangNative.SetProgramSourceFile(programPtr, stage, filePtr);
         Marshal.FreeHGlobal(filePtr);
     }
 
 
     public bool MapIO()
     {
-        return GlslangNative.glslang_program_map_io(programPtr) == 1;
+        return GlslangNative.MapProgramIO(programPtr) == 1;
     }
 
 
@@ -67,18 +67,18 @@ public class ShaderProgram
         {
             IntPtr optionsPtr = Marshal.AllocHGlobal(Marshal.SizeOf<SPIRVOptions>());
             Marshal.StructureToPtr(options.Value, optionsPtr, false);
-            GlslangNative.glslang_program_SPIRV_generate_with_options(programPtr, stage, optionsPtr);
+            GlslangNative.GenerateProgramSPIRVWithOptiosn(programPtr, stage, optionsPtr);
             Marshal.FreeHGlobal(optionsPtr);
-            GlslangNative.glslang_program_SPIRV_generate(programPtr, stage);
+            GlslangNative.GenerateProgramSPIRV(programPtr, stage);
         }
         else
         {
-            GlslangNative.glslang_program_SPIRV_generate(programPtr, stage);
+            GlslangNative.GenerateProgramSPIRV(programPtr, stage);
         }
 
-        nuint size = GlslangNative.glslang_program_SPIRV_get_size(programPtr);
+        nuint size = GlslangNative.GetProgramSPIRVSize(programPtr);
         SPIRVWords = new byte[(int)size * sizeof(uint)];
-        GlslangNative.glslang_program_SPIRV_get(programPtr, SPIRVWords);
+        GlslangNative.GetProgramSPIRVBuffer(programPtr, SPIRVWords);
 
         generatedSPIRV = true;
 
@@ -96,21 +96,21 @@ public class ShaderProgram
             );
         }
 
-        IntPtr SPIRVMessagesPtr = GlslangNative.glslang_program_SPIRV_get_messages(programPtr);
+        IntPtr SPIRVMessagesPtr = GlslangNative.GetProgramSPIRVMessages(programPtr);
         return DeallocString(SPIRVMessagesPtr);
     }
 
 
     public string GetInfoLog()
     {
-        IntPtr infoLogPtr = GlslangNative.glslang_program_get_info_debug_log(programPtr);
+        IntPtr infoLogPtr = GlslangNative.GetProgramInfoDebugLog(programPtr);
         return DeallocString(infoLogPtr);
     }
 
 
     public string GetDebugLog()
     {
-        IntPtr debugLogPtr = GlslangNative.glslang_program_get_info_log(programPtr);
+        IntPtr debugLogPtr = GlslangNative.GetProgramInfoLog(programPtr);
         return DeallocString(debugLogPtr);
     }
 

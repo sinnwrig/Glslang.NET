@@ -59,7 +59,7 @@ glslang = 'glslang'
 glslang_src = path.join(glslang, 'source')
 glslang_lib = path.join(glslang, 'lib')
 
-version = '0.12.0'
+version = 'any'
 
 # Ensure a copy of glslang exists
 if len(os.listdir(full_path(glslang_src))) == 0:
@@ -70,7 +70,7 @@ try:
     sys_result = subprocess.run([ 'zig', 'version'], check = True, capture_output = True, text = True)
     res_strip = sys_result.stdout.rstrip()
 
-    if res_strip != version:
+    if res_strip != version and version != 'any':
         print(f"Invalid zig version: {res_strip}. Please install zig version {version}")
         exit(1)
 except subprocess.CalledProcessError:

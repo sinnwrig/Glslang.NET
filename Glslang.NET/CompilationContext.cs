@@ -14,7 +14,7 @@ public class CompilationContext : NativeResourceHandle
     {
         GlslangNative.ResolveAssemblies(librarySearchPaths);
         
-        int success = GlslangNative.glslang_initialize_process();
+        int success = GlslangNative.InitializeProcess();
 
         if (success != 1)
             throw new Exception("Failed to initialize native context process."); 
@@ -39,7 +39,7 @@ public class CompilationContext : NativeResourceHandle
 
     public string DisassembleSPIRV(byte[] spirvWords)
     {
-        IntPtr textPtr = GlslangNative.glslang_SPIRV_disassemble(spirvWords, (nuint)(spirvWords.Length / sizeof(uint)));
+        IntPtr textPtr = GlslangNative.DisassembleSPIRV(spirvWords, (nuint)(spirvWords.Length / sizeof(uint)));
         string text = Marshal.PtrToStringUTF8(textPtr) ?? string.Empty;
         Marshal.FreeHGlobal(textPtr);
         return text;
@@ -54,6 +54,6 @@ public class CompilationContext : NativeResourceHandle
         foreach (Shader sh in activeShaders)
             sh.Release();
 
-        GlslangNative.glslang_finalize_process();
+        GlslangNative.FinalizeProcess();
     }    
 }
