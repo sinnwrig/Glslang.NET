@@ -41,7 +41,7 @@ float4 pixel(Input input) : SV_Target
     }
 
 
-    // If this looks familiar, that's because it is. See glslang's C interface: https://github.com/KhronosGroup/glslang?tab=readme-ov-file#c-functional-interface-new
+    // If this looks familiar, that's because it is. See glslang's C interface example: https://github.com/KhronosGroup/glslang?tab=readme-ov-file#c-functional-interface-new
     static void Main()
     {
         using CompilationContext context = new CompilationContext();
@@ -116,7 +116,7 @@ To support cross-platform compilation and to simplify the native build process, 
 
 ## Building Native Libraries
 
-To build native libraries, run build_libraries.py, specicying the target architecture with -A [x86_64, arm64, all] and the target platform with -P [windows, linux, macos, all].<br>If the command is being run for the first time, it will download the glslang-zig source repository and any sub-dependencies.
+To build native libraries, run `build_libraries.py`, specicying the target architecture with `-A [x86_64, arm64, all]` and the target platform with `-P [windows, linux, macos, all]`.<br>If the command is being run for the first time, it will download the glslang-zig source repository and any sub-dependencies.
 
 Native build requirements:
 - Zig version 0.13.0 or higher.

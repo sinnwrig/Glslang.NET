@@ -127,10 +127,13 @@ public class Shader
         if (!isPreprocessed)
         {
             Preprocess();
-            throw new WarningException(
-                "Shader.GetPreprocessed() called before Shader.Preprocess(), Preprocess() called implicitly." + 
-                "This may be a sign of bad control flow. Please ensure Preprocess() is called before GetPreprocessedCode()."
-            );
+
+            ConsoleColor prev = Console.ForegroundColor;
+            
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine("Warning: Shader.GetPreprocessed() called before Shader.Preprocess(), Preprocess() called implicitly." + 
+                "This may be a sign of bad control flow. Please ensure Preprocess() is called before GetPreprocessedCode().");
+            Console.ForegroundColor = prev;
         }
 
         IntPtr preprocessedCodePtr = GlslangNative.GetPreprocessedShaderCode(shaderPtr);
