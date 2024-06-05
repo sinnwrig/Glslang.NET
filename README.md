@@ -40,6 +40,7 @@ float4 pixel(Input input) : SV_Target
     }
 
 
+    // If this looks familiar, that's because it is. See glslang's C interface: https://github.com/KhronosGroup/glslang?tab=readme-ov-file#c-functional-interface-new
     static void Main()
     {
         using CompilationContext context = new CompilationContext();
@@ -113,14 +114,15 @@ float4 pixel(Input input) : SV_Target
 
 # Native Details
 
-To support cross-platform compilation and to simplify the native build process, Glslang.NET uses a [fork of glslang](https://github.com/sinnwrig/glslang-zig) built with zig instead of CMake or GN/Ninja. As Zig's compiler supports cross-compilation out of the box, it allows glslang to build on any platform, for any platform. With minor tweaking, additional functionality also allows glslang to export the ability to disassemble SPIR-V bytecode into a human-readable format. 
+To support cross-platform compilation and to simplify the native build process, Glslang.NET uses a [fork of glslang](https://github.com/sinnwrig/glslang-zig) built with zig instead of CMake or GN/Ninja. As Zig's compiler supports cross-compilation out of the box, it allows glslang to build on any platform, for any platform. Additional functionality is also included in the repository to allow glslang to export the ability to disassemble SPIR-V bytecode into a human-readable format. 
 
 ## Building Native Libraries
 
-To build native libraries, run build_libraries.py, specicying your target architecture [x86_64, arm64, all] with -A and your target platform [windows, linux, macos, all] with -P.<br>If the command is being run for the first time, it will pull the DXC source repository and download a release of the Zig compiler.
+To build native libraries, run build_libraries.py, specicying the target architecture with -A [x86_64, arm64, all] and your target platform with -P [windows, linux, macos, all].<br>If the command is being run for the first time, it will pull the glslang-zig source repository.
 
 Native build requirements:
-- Zig version 0.13.0 or higher (development builds only at the moment)
+- Zig version 0.13.0 or higher.
+- Python 3 (Required for build_libraries.py, upgate_glslang_sources.py, gen_extension_headers.py. Future releases will aim to reduce and potentially cut off the dependency on python)
 
 Pre-built binaries are bundled in the NuGet package for the following operating systems:
 - Windows x64

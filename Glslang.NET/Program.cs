@@ -4,13 +4,18 @@ using System.Runtime.InteropServices;
 namespace Glslang.NET;
 
 
-public class ShaderProgram
+/// <summary>
+/// The shader program used to link and generate shader code.
+/// </summary>
+/// <remarks>
+/// Ensure this class is only created through `CompilationContext.CreateProgram`.
+/// </remarks>
+public class Program
 {
-    IntPtr programPtr;
+    readonly IntPtr programPtr;
 
 
-
-    internal ShaderProgram()
+    internal Program()
     {
         programPtr = GlslangNative.CreateProgram();
     }
@@ -22,19 +27,30 @@ public class ShaderProgram
     }
 
 
-
+    /// <summary>
+    /// Add a shader to the program. 
+    /// </summary>
+    /// <param name="shader">The shader to add.</param>
     public void AddShader(Shader shader)
     {
         GlslangNative.AddShaderToProgram(programPtr, shader.shaderPtr);
     }
     
 
+    /// <summary>
+    /// Link added shaders together.
+    /// </summary>
+    /// <param name="messages">Output message types.</param>
+    /// <returns>True if linking succeeded.</returns>
     public bool Link(MessageType messages)
     {
         return GlslangNative.LinkProgram(programPtr, messages) == 1;
     }
     
 
+    /// <summary>
+    /// Add source text to intermediate.
+    /// </summary>
     public void AddSourceText(ShaderStage stage, string text)
     {
         IntPtr textPtr = NativeStringUtility.AllocUTF8Ptr(text, out uint length, false);
@@ -43,6 +59,9 @@ public class ShaderProgram
     }
     
 
+    /// <summary>
+    /// Add source file name to intermediate.
+    /// </summary>
     public void SetSourceFile(ShaderStage stage, string file)
     {
         IntPtr filePtr = NativeStringUtility.AllocUTF8Ptr(file, out _, true);
@@ -51,6 +70,10 @@ public class ShaderProgram
     }
 
 
+    /// <summary>
+    /// Map the program's imputs and outputs.
+    /// </summary>
+    /// <returns>True if mapping succeeded.</returns>
     public bool MapIO()
     {
         return GlslangNative.MapProgramIO(programPtr) == 1;
@@ -61,6 +84,13 @@ public class ShaderProgram
     
     private bool generatedSPIRV = false;
 
+    /// <summary>
+    /// Outputs a byte buffer of generated SPIR-V words.
+    /// </summary>
+    /// <param name="SPIRVWords">The output buffer of SPIR-V words</param>
+    /// <param name="stage">The shader stage to output.</param>
+    /// <param name="options">The generation options to use.</param>
+    /// <returns>True if generation succeeded.</returns>
     public bool GenerateSPIRV(out byte[] SPIRVWords, ShaderStage stage, SPIRVOptions? options = null)
     {
         if (options != null)
@@ -86,6 +116,10 @@ public class ShaderProgram
     }
 
 
+    /// <summary>
+    /// Gets SPIR-V generation messages.
+    /// </summary>
+    /// <exception cref="InvalidOperationException"></exception>
     public string GetSPIRVMessages()
     {
         if (!generatedSPIRV)
@@ -101,6 +135,9 @@ public class ShaderProgram
     }
 
 
+    /// <summary>
+    /// Gets program info log.
+    /// </summary>
     public string GetInfoLog()
     {
         IntPtr infoLogPtr = GlslangNative.GetProgramInfoDebugLog(programPtr);
@@ -108,6 +145,9 @@ public class ShaderProgram
     }
 
 
+    /// <summary>
+    /// Gets program debug and error logs.
+    /// </summary>
     public string GetDebugLog()
     {
         IntPtr debugLogPtr = GlslangNative.GetProgramInfoLog(programPtr);

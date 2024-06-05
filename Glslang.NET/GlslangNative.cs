@@ -41,31 +41,25 @@ internal static class GlslangNative
     const string LinuxLib = "lib" + LibName + ".so";
 
 
-    private static string CreateLibPath(string platform) => Path.Combine("runtimes", platform, "native");
-
-    private static readonly Dictionary<PlatformInfo, (string, string)> LibraryPaths = new()
+    private static readonly Dictionary<PlatformInfo, string> LibraryNames = new()
     {
-        { new PlatformInfo(OSPlatform.Windows, Architecture.X64), (CreateLibPath("win-x64"), WinLib) },
-        { new PlatformInfo(OSPlatform.Windows, Architecture.Arm64), (CreateLibPath("win-arm64"), WinLib) },
+        { new PlatformInfo(OSPlatform.Windows, Architecture.X64), WinLib },
+        { new PlatformInfo(OSPlatform.Windows, Architecture.Arm64), WinLib },
 
-        { new PlatformInfo(OSPlatform.OSX, Architecture.X64), (CreateLibPath("osx-x64"), OSXLib) },
-        { new PlatformInfo(OSPlatform.OSX, Architecture.Arm64), (CreateLibPath("osx-arm64"), OSXLib) },
+        { new PlatformInfo(OSPlatform.OSX, Architecture.X64), OSXLib },
+        { new PlatformInfo(OSPlatform.OSX, Architecture.Arm64), OSXLib },
 
-        { new PlatformInfo(OSPlatform.Linux, Architecture.X64), (CreateLibPath("linux-x64"), LinuxLib) },
-        { new PlatformInfo(OSPlatform.Linux, Architecture.Arm64), (CreateLibPath("linux-arm64"), LinuxLib) },
+        { new PlatformInfo(OSPlatform.Linux, Architecture.X64), LinuxLib },
+        { new PlatformInfo(OSPlatform.Linux, Architecture.Arm64), LinuxLib },
     };
 
 
     private static bool _assembliesResolved = false;
-    private static string[]? additionalSearchPaths;
 
-
-    internal static void ResolveAssemblies(string[]? additionalSearchPaths)
+    internal static void ResolveAssemblies()
     {
         if (_assembliesResolved)
             return;
-
-        GlslangNative.additionalSearchPaths = additionalSearchPaths;
 
         NativeLibrary.SetDllImportResolver(Assembly.GetExecutingAssembly(), DllImportResolver);
 
@@ -79,54 +73,12 @@ internal static class GlslangNative
 
         PlatformInfo platform = PlatformInfo.GetCurrentPlatform();
 
-        (string, string) libraryPath = LibraryPaths[platform];
+        string libraryPath = LibraryNames[platform];
 
-        /*string applicationPath = AppContext.BaseDirectory;
-        string assemblyPath = Path.GetDirectoryName(assembly.Location) ?? applicationPath;
-
-        List<string> searchPaths = new()
-        {
-            // Possible library locations in release build
-            applicationPath, // App path
-            assemblyPath,    // Assembly path
-
-            // Possible library locations in debug build
-            Path.Join(applicationPath, libraryPath.Item1), 
-            Path.Join(assemblyPath, libraryPath.Item1),  
-        };
-        
-        // Add other possible library paths
-        if (additionalSearchPaths != null)
-        {
-            foreach (string path in additionalSearchPaths)
-            {
-                // Root path, no need to combine
-                if (Path.IsPathRooted(path))
-                {
-                    searchPaths.Add(path);
-                }
-                else
-                {
-                    // Add possible application and assembly paths.
-                    searchPaths.Add(Path.Join(applicationPath, path));
-                    searchPaths.Add(Path.Join(assemblyPath, path));
-                }
-            }
-        }
-
-        string bestPath = "/"; 
-        foreach (string path in searchPaths)
-        {
-            string filePath = Path.Join(path, libraryPath.Item2);
-
-            if (File.Exists(filePath))
-                bestPath = filePath;
-        }*/
-
-        IntPtr library = NativeLibrary.Load(libraryPath.Item2, assembly, DllImportSearchPath.AssemblyDirectory | DllImportSearchPath.ApplicationDirectory);
+        IntPtr library = NativeLibrary.Load(libraryPath, assembly, DllImportSearchPath.AssemblyDirectory | DllImportSearchPath.ApplicationDirectory);
 
         if (library == IntPtr.Zero)
-            throw new DllNotFoundException($"Could not find {libraryPath.Item2} shared library");
+            throw new DllNotFoundException($"Could not find {libraryPath} shared library");
 
         return library;
     }

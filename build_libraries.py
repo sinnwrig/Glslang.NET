@@ -5,6 +5,7 @@ import platform
 import subprocess
 import argparse
 import shutil
+import re
 
 import utils.github as github
 import utils.platformver as platformver
@@ -60,16 +61,23 @@ glslang = 'glslang'
 glslang_src = path.join(glslang, 'source')
 glslang_lib = path.join(glslang, 'lib')
 
-version = 'any'
+version = '0.13.0'
 
 # Ensure the correct zig version (if any) is installed on the system
 try: 
     sys_result = subprocess.run([ 'zig', 'version'], check = True, capture_output = True, text = True)
-    res_strip = sys_result.stdout.rstrip()
 
-    if res_strip != version and version != 'any':
-        print(f"Invalid zig version: {res_strip}. Please install zig version {version}")
-        exit(1)
+    if version != 'any':
+        res_strip = sys_result.stdout.rstrip()
+
+        # Splits the output with regex, gets first three elements denoting the version, joins it, and parses to an integer
+        p_version = int(''.join(re.split('\\.|-', version)[0:3]))
+        p_out_version = int(''.join(re.split('\\.|-', res_strip)[0:3]))
+
+        # Version should not be higher than minimum version
+        if p_version > p_out_version:
+            print(f"Invalid zig version: {res_strip}. Please install zig version {version}")
+            exit(1)
 except subprocess.CalledProcessError:
     print("Could not run `zig version`. Is zig installed on the system?")
     exit(1)
@@ -120,7 +128,7 @@ ensure(arch_aliases, arch_args)
 
 print('Updating glslang sources:')
 
-clone_repo('sinnwrig', 'glslang-zig', 'glslang/source')
+github.clone_repo('sinnwrig', 'glslang-zig', 'glslang/source')
 
 subprocess.run([ 'python3', './update_glslang_sources.py', '--site', 'zig' ], cwd = full_path('glslang/source'), check = True)
 

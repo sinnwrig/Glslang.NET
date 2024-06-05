@@ -6,46 +6,14 @@ internal static class MainProgram
     const string fragmentSource = @"
 #include ""./SomeFile.hlsl""
 
-struct VertexInput
-{
-    float2 Position : POSITION;
-    float4 Color : COLOR0;
-};
-
-struct VertexOutput
+struct Input
 {
     float4 Position : SV_POSITION;
     float4 Color : COLOR0;
 };
 
-
-VertexOutput vertex(VertexInput input)
-{
-    VertexOutput output;
-    output.Position = float4(input.Position, 0, 1);
-    output.Color = input.Color;
-    return output;
-}
-
-#define DO_SOMETHING(x) x * 10 + 4 - 8 + sqrt(x) / abs(x)
-
-
-float4 pixel(VertexOutput input) : SV_Target
-{
-    float value = DO_SOMETHING(input.Color.r);
-
-    float value2 = DO_SOMETHING(value);
-
-    float value3 = DO_SOMETHING(value2);
-
-    input.Color *= 10;
-
-    input.Color /= 43.55;
-
-    input.Color.g = value2;
-    input.Color.b = value;
-    input.Color.a = value3;
-    
+float4 pixel(Input input) : SV_Target
+{    
     return input.Color;
 }
 ";
@@ -55,7 +23,7 @@ float4 pixel(VertexOutput input) : SV_Target
         Console.WriteLine($"Including a {(isSystemFile ? "system" : "local")} file, `{headerName}` from `{includerName}` at depth {depth}.");
         IncludeResult result;
 
-        result.headerData = "// Nothing to see here";
+        result.headerData = $"// Included file {headerName}";
         result.headerName = headerName;
         
         return result;
@@ -104,7 +72,7 @@ float4 pixel(VertexOutput input) : SV_Target
             return;
         }
 
-        ShaderProgram program = context.CreateProgram();
+        Program program = context.CreateProgram();
 
         program.AddShader(shader);
 

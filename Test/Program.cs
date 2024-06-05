@@ -106,7 +106,7 @@ float4 pixel(VertexOutput input) : SV_Target
             return;
         }
 
-        ShaderProgram program = context.CreateProgram();
+        Program program = context.CreateProgram();
 
         program.AddShader(shader);
 
