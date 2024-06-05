@@ -4,7 +4,7 @@ namespace Glslang.NET;
 
 
 /// <summary>
-/// The context within all glslang member functions should be invoked. 
+/// The context in which all glslang member functions should be invoked. 
 /// </summary>
 /// <remarks>
 /// Ensure this context is properly freed with a `using` statement or by manually calling Dispose
