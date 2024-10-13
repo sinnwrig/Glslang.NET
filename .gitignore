@@ -1,5 +1,7 @@
 obj/
 bin/
+lib/
 glslang/
 glslang/
 */__pycache__/
+.vscode/
