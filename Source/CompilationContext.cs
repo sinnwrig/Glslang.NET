@@ -11,7 +11,7 @@ namespace Glslang.NET;
 /// </remarks>
 public class CompilationContext : IDisposable
 {
-    static void Main() { } 
+    static void Main() { }
 
     private static bool _instanceExists = false;
 
@@ -34,10 +34,8 @@ public class CompilationContext : IDisposable
 
         _instanceExists = true;
 
-        GlslangNative.ResolveAssemblies();
-        
         if (GlslangNative.InitializeProcess() != 1)
-            throw new FailedInitializationException("Failed to initialize glslang native process."); 
+            throw new FailedInitializationException("Failed to initialize glslang native process.");
     }
 
 
@@ -104,9 +102,9 @@ public class CompilationContext : IDisposable
 
     /// <summary></summary>
     ~CompilationContext()
-    {   
+    {
         ConsoleColor prev = Console.ForegroundColor;
-        
+
         Console.ForegroundColor = ConsoleColor.Yellow;
         Console.WriteLine($"Warning: CompilationContext was not properly deallocated. Ensure object is disposed by manually calling Dispose() or by utilizing a `using` statement.");
         Console.ForegroundColor = prev;
@@ -119,14 +117,14 @@ public class CompilationContext : IDisposable
 /// <summary>
 /// Returned if native library process initialization failed.
 /// </summary>
-public class FailedInitializationException : Exception 
+public class FailedInitializationException : Exception
 {
     /// <summary></summary>
-    public FailedInitializationException() { } 
+    public FailedInitializationException() { }
 
     /// <summary></summary>
     public FailedInitializationException(string message) : base(message) { }
-    
+
     /// <summary></summary>
     public FailedInitializationException(string message, Exception inner) : base(message, inner) { }
 
@@ -136,14 +134,14 @@ public class FailedInitializationException : Exception
 /// <summary>
 /// Returned if multiple instances of a class are detected.
 /// </summary>
-public class MultipleInstanceException : Exception 
+public class MultipleInstanceException : Exception
 {
     /// <summary></summary>
-    public MultipleInstanceException() { } 
+    public MultipleInstanceException() { }
 
     /// <summary></summary>
     public MultipleInstanceException(string message) : base(message) { }
-    
+
     /// <summary></summary>
     public MultipleInstanceException(string message, Exception inner) : base(message, inner) { }
 

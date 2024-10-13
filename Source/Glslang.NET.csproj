@@ -1,0 +1,93 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFrameworks>net8.0</TargetFrameworks>
+        <OutputType>Library</OutputType>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <PackageId>Glslang.NET</PackageId>
+        <Version>1.0.0</Version>
+        
+        <Authors>Kai Angulo</Authors>
+        <Owners>Kai Angulo</Owners>
+        <Copyright>Copyright (c) Kai Angulo 2024.</Copyright>
+
+        <Description>A cross-platform managed wrapper for the Khronos Group's GLSL reference compiler</Description>
+        <RepositoryUrl>https://github.com/sinnwrig/DirectXShaderCompiler.NET</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+
+        <PackageTags>shader compiler glslang glsl hlsl khronos shader-programs spirv spir-v Vulkan OpenGL</PackageTags>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageLicenseFile>LICENSE</PackageLicenseFile>
+
+        <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <WindowsX64BinPath>..\Native\lib\windows-x64\bin\*.dll</WindowsX64BinPath>
+        <WindowsArm64BinPath>..\Native\lib\windows-arm64\bin\*.dll</WindowsArm64BinPath>
+        <LinuxX64LibPath>..\Native\lib\linux-x64\lib\*.so</LinuxX64LibPath>
+        <LinuxArm64LibPath>..\Native\lib\linux-arm64\lib\*.so</LinuxArm64LibPath>
+        <MacosX64LibPath>..\Native\lib\macos-x64\lib\*.dylib</MacosX64LibPath>
+        <MacosArm64LibPath>..\Native\lib\macos-arm64\lib\*.dylib</MacosArm64LibPath>
+
+        <WindowsX64RuntimePath>runtimes\win-x64\native</WindowsX64RuntimePath>
+        <WindowsArm64RuntimePath>runtimes\win-arm64\native</WindowsArm64RuntimePath>
+        <LinuxX64RuntimePath>runtimes\linux-x64\native</LinuxX64RuntimePath>
+        <LinuxArm64RuntimePath>runtimes\linux-arm64\native</LinuxArm64RuntimePath>
+        <MacosX64RuntimePath>runtimes\osx-x64\native</MacosX64RuntimePath>
+        <MacosArm64RuntimePath>runtimes\osx-arm64\native</MacosArm64RuntimePath>
+    </PropertyGroup>
+    
+    <ItemGroup>
+        <None Include="../LICENSE" Pack="true" PackagePath="\"/>
+        <None Include="../README.md" Pack="true" PackagePath="\"/>
+
+        <Content Include="$(WindowsX64BinPath)">
+            <Pack>true</Pack>
+            <PackagePath>$(WindowsX64RuntimePath)</PackagePath>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <Link>$(WindowsX64RuntimePath)\%(Filename)%(Extension)</Link>
+        </Content>
+    
+        <Content Include="$(WindowsArm64BinPath)">
+            <Pack>true</Pack>
+            <PackagePath>$(WindowsArm64RuntimePath)</PackagePath>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <Link>$(WindowsArm64RuntimePath)\%(Filename)%(Extension)</Link>
+        </Content>
+    
+        <Content Include="$(LinuxX64LibPath)">
+            <Pack>true</Pack>
+            <PackagePath>$(LinuxX64RuntimePath)</PackagePath>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <Link>$(LinuxX64RuntimePath)\%(Filename)%(Extension)</Link>
+        </Content>
+    
+        <Content Include="$(LinuxArm64LibPath)">
+            <Pack>true</Pack>
+            <PackagePath>$(LinuxArm64RuntimePath)</PackagePath>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <Link>$(LinuxArm64RuntimePath)\%(Filename)%(Extension)</Link>
+        </Content>
+  
+        <Content Include="$(MacosX64LibPath)">
+            <Pack>true</Pack>
+            <PackagePath>$(MacosX64RuntimePath)</PackagePath>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <Link>$(MacosX64RuntimePath)\%(Filename)%(Extension)</Link>
+        </Content>
+  
+        <Content Include="$(MacosArm64LibPath)">
+            <Pack>true</Pack>
+            <PackagePath>$(MacosArm64RuntimePath)</PackagePath>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <Link>$(MacosArm64RuntimePath)\%(Filename)%(Extension)</Link>
+        </Content>
+    </ItemGroup>    
+</Project>
