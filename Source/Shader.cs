@@ -10,8 +10,8 @@ namespace Glslang.NET;
 /// <remarks>
 /// Ensure this class is only created through `CompilationContext.CreateShader`.
 /// </remarks>
-public class Shader
-{   
+public unsafe class Shader : IDisposable
+{
     /// <summary>
     /// Input compilation options the shader will use during its lifecycle.
     /// </summary>
@@ -20,22 +20,47 @@ public class Shader
     /// </remarks>
     public readonly CompilationInput input;
 
+
+    internal readonly NativeShader* shader;
+    internal bool isDisposed;
+
     private readonly IntPtr compilerInputPtr;
-    internal readonly IntPtr shaderPtr;
 
 
-
-    internal Shader(CompilationInput input)
+    /// <summary>
+    /// Creates a new shader instance from the given input options.
+    /// </summary>
+    /// <param name="input"></param>
+    public Shader(CompilationInput input)
     {
+        this.input = input;
+
         compilerInputPtr = CompilationInputNative.GetPtrForCompilationInput(input);
-        shaderPtr = GlslangNative.CreateShader(compilerInputPtr);
+        shader = GlslangNative.CreateShader(compilerInputPtr);
+
+        CompilationContext.WeakOnReloadCallback(this);
     }
 
 
-    internal void Release()
+    /// <summary>
+    /// Disposes of the current shader instance. Using the shader after calling this is prohibited.
+    /// </summary>
+    public void Dispose()
     {
-        GlslangNative.DeleteShader(shaderPtr);
+        if (isDisposed)
+            return;
+
+        isDisposed = true;
+        GlslangNative.DeleteShader(shader);
         CompilationInputNative.ReleasePtrForCompilationInput(compilerInputPtr);
+        GC.SuppressFinalize(this);
+    }
+
+
+    /// <summary></summary>
+    ~Shader()
+    {
+        Dispose();
     }
 
 
@@ -45,8 +70,11 @@ public class Shader
     /// <param name="preamble">Preamble text to insert.</param>
     public void SetPreamble(string preamble)
     {
+        if (isDisposed)
+            throw ShaderDisposedException.Disposed;
+
         IntPtr preamblePtr = NativeStringUtility.AllocUTF8Ptr(preamble, out _, true);
-        GlslangNative.SetShaderPreamble(shaderPtr, preamblePtr);
+        GlslangNative.SetShaderPreamble(shader, preamblePtr);
         Marshal.FreeHGlobal(preamblePtr);
     }
 
@@ -58,7 +86,10 @@ public class Shader
     /// <param name="shiftBase">Base to shift by.</param>
     public void ShiftBinding(ResourceType resourceType, uint shiftBase)
     {
-        GlslangNative.ShiftShaderBinding(shaderPtr, resourceType, shiftBase);
+        if (isDisposed)
+            throw ShaderDisposedException.Disposed;
+
+        GlslangNative.ShiftShaderBinding(shader, resourceType, shiftBase);
     }
 
 
@@ -70,7 +101,10 @@ public class Shader
     /// <param name="set">Set to shift.</param>
     public void ShiftBindingForSet(ResourceType resourceType, uint shiftBase, uint set)
     {
-        GlslangNative.ShiftShaderBindingForSet(shaderPtr, resourceType, shiftBase, set);
+        if (isDisposed)
+            throw ShaderDisposedException.Disposed;
+
+        GlslangNative.ShiftShaderBindingForSet(shader, resourceType, shiftBase, set);
     }
 
 
@@ -79,7 +113,10 @@ public class Shader
     /// </summary>
     public void SetOptions(ShaderOptions options)
     {
-        GlslangNative.SetShaderOptions(shaderPtr, options);
+        if (isDisposed)
+            throw ShaderDisposedException.Disposed;
+
+        GlslangNative.SetShaderOptions(shader, options);
     }
 
 
@@ -88,10 +125,13 @@ public class Shader
     /// </summary>
     public void SetGLSLVersion(int version)
     {
-        GlslangNative.SetShaderGLSLVersion(shaderPtr, version);
+        if (isDisposed)
+            throw ShaderDisposedException.Disposed;
+
+        GlslangNative.SetShaderGLSLVersion(shader, version);
     }
 
-    
+
     private bool isPreprocessed = false;
 
 
@@ -101,7 +141,10 @@ public class Shader
     /// <returns>True if preprocessing was successful.</returns>
     public bool Preprocess()
     {
-        int result = GlslangNative.PreprocessShader(shaderPtr, compilerInputPtr);
+        if (isDisposed)
+            throw ShaderDisposedException.Disposed;
+
+        int result = GlslangNative.PreprocessShader(shader, compilerInputPtr);
         isPreprocessed = true;
         return result == 1; // Success
     }
@@ -113,10 +156,13 @@ public class Shader
     /// <returns>True if parsing was successful.</returns>
     public bool Parse()
     {
-        return GlslangNative.ParseShader(shaderPtr, compilerInputPtr) == 1; // Success
+        if (isDisposed)
+            throw ShaderDisposedException.Disposed;
+
+        return GlslangNative.ParseShader(shader, compilerInputPtr) == 1; // Success
     }
 
-    
+
     /// <summary>
     /// Get preprocessed shader code.
     /// </summary>
@@ -124,20 +170,23 @@ public class Shader
     /// <exception cref="WarningException"></exception>
     public string GetPreprocessedCode()
     {
+        if (isDisposed)
+            throw ShaderDisposedException.Disposed;
+
         if (!isPreprocessed)
         {
             Preprocess();
 
             ConsoleColor prev = Console.ForegroundColor;
-            
+
             Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine("Warning: Shader.GetPreprocessed() called before Shader.Preprocess(), Preprocess() called implicitly." + 
+            Console.WriteLine("Warning: Shader.GetPreprocessed() called before Shader.Preprocess(), Preprocess() called implicitly." +
                 "This may be a sign of bad control flow. Please ensure Preprocess() is called before GetPreprocessedCode().");
             Console.ForegroundColor = prev;
         }
 
-        IntPtr preprocessedCodePtr = GlslangNative.GetPreprocessedShaderCode(shaderPtr);
-        return DeallocString(preprocessedCodePtr);
+        IntPtr preprocessedCodePtr = GlslangNative.GetPreprocessedShaderCode(shader);
+        return Marshal.PtrToStringUTF8(preprocessedCodePtr) ?? string.Empty;
     }
 
 
@@ -146,24 +195,34 @@ public class Shader
     /// </summary>
     public string GetInfoLog()
     {
-        IntPtr infoLogPtr = GlslangNative.GetShaderInfoDebugLog(shaderPtr);
-        return DeallocString(infoLogPtr);
+        if (isDisposed)
+            throw ShaderDisposedException.Disposed;
+
+        IntPtr infoLogPtr = GlslangNative.GetShaderInfoDebugLog(shader);
+        return Marshal.PtrToStringUTF8(infoLogPtr) ?? string.Empty;
     }
 
-    
+
     /// <summary>
     /// Get shader debug and error logs.
     /// </summary>
     public string GetDebugLog()
     {
-        IntPtr debugLogPtr = GlslangNative.GetShaderInfoLog(shaderPtr);
-        return DeallocString(debugLogPtr);
+        if (isDisposed)
+            throw ShaderDisposedException.Disposed;
+
+        IntPtr debugLogPtr = GlslangNative.GetShaderInfoLog(shader);
+        return Marshal.PtrToStringUTF8(debugLogPtr) ?? string.Empty;
     }
+}
 
 
-    private static string DeallocString(IntPtr stringPtr)
-    {
-        string managedString = Marshal.PtrToStringUTF8(stringPtr) ?? string.Empty;
-        return managedString;
-    }
+/// <summary>
+/// Returned if a shader method is called on an already disposed shader.
+/// </summary>
+public class ShaderDisposedException : Exception
+{
+    internal static ShaderDisposedException Disposed = new ShaderDisposedException("Shader is disposed");
+
+    internal ShaderDisposedException(string message) : base(message) { }
 }
