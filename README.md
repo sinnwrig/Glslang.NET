@@ -1,6 +1,8 @@
-# Glslang.NET: cross-platform C# wrapper for Khronos Group's glslang HLSL/GLSL compiler.
+# Glslang.NET: cross-platform C# wrapper for the Khronos Group's reference GLSL/SPIR-V compiler 
 
-A cross-platform .NET wrapper written in C# to enable generating SPIR-V from GLSL/HLSL using Khronos' glslang compiler.
+A cross-platform .NET 8.0 wrapper for the Khronos GLSL reference compiler, written in C#. 
+
+[![NuGet](https://img.shields.io/nuget/v/Glslang.NET.svg)](https://www.nuget.org/packages/Glslang.NET)
 
 # Usage
 
