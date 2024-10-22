@@ -4,111 +4,7 @@ A cross-platform .NET wrapper written in C# to enable generating SPIR-V from GLS
 
 # Usage
 
-This project wraps functionality from glslang into managed classes, which can be used to compile shader code with various options in a similar fashion to the native glslang interface.<br>
-The following is a short example showcasing how a shader can be compiled using this wrapper, along with how source file inclusion can be overridden from C#.
-
-```cs
-using Glslang.NET;
-
-namespace Application;
-
-public class Program
-{        
-    const string fragmentSource = @"
-#include ""./IncludeFile.hlsl""
-
-struct Input
-{
-    float4 Position : SV_POSITION;
-    float4 Color : COLOR0;
-};
-
-float4 pixel(Input input) : SV_Target
-{
-    return input.Color;
-}
-";
-
-    static IncludeResult IncludeFunction(string headerName, string includerName, uint depth, bool isSystemFile)
-    {
-        Console.WriteLine($"Including a {(isSystemFile ? "system" : "local")} file, `{headerName}` from `{includerName}` at depth {depth}.");
-        IncludeResult result;
-
-        result.headerData = "// Generated include";
-        result.headerName = headerName;
-        
-        return result;
-    }
-
-
-    // If this looks familiar, that's because it is. See glslang's C interface example: https://github.com/KhronosGroup/glslang?tab=readme-ov-file#c-functional-interface-new
-    static void Main()
-    {
-        using CompilationContext context = new CompilationContext();
-
-        CompilationInput input = new CompilationInput() 
-        {
-            language = SourceType.HLSL,
-            stage = ShaderStage.Fragment,
-            client = ClientType.Vulkan,
-            clientVersion = TargetClientVersion.Vulkan_1_2,
-            targetLanguage = TargetLanguage.SPV,
-            targetLanguageVersion = TargetLanguageVersion.SPV_1_5,
-            code = fragmentSource,
-            sourceEntrypoint = "pixel",
-            defaultVersion = 100,
-            defaultProfile = ShaderProfile.None,
-            forceDefaultVersionAndProfile = false,
-            forwardCompatible = false,
-            fileIncluder = IncludeFunction
-        };
-
-        Shader shader = context.CreateShader(input);
-        
-        if (!shader.Preprocess())	
-        {
-            Console.WriteLine("HLSL preprocessing failed");
-            Console.WriteLine(shader.GetInfoLog());
-            Console.WriteLine(shader.GetDebugLog());
-            Console.WriteLine(fragmentSource);
-            return;
-        }
-
-        if (!shader.Parse()) 
-        {
-            Console.WriteLine("HLSL parsing failed");
-            Console.WriteLine(shader.GetInfoLog());
-            Console.WriteLine(shader.GetDebugLog());
-            Console.WriteLine(shader.GetPreprocessedCode());
-            return;
-        }
-
-        ShaderProgram program = context.CreateProgram();
-
-        program.AddShader(shader);
-
-        if (!program.Link(MessageType.SPVRules | MessageType.VulkanRules)) 
-        {
-            Console.WriteLine("HLSL linking failed");
-            Console.WriteLine(program.GetInfoLog());
-            Console.WriteLine(program.GetDebugLog());
-            return;
-        }
-
-        program.GenerateSPIRV(out byte[] words, input.stage);
-
-        string messages = program.GetSPIRVMessages();
-
-        if (!string.IsNullOrWhiteSpace(messages))
-            Console.WriteLine(messages);
-
-        Console.WriteLine($"Generated {words.Length} bytes of SPIR-V");
-
-        Console.WriteLine($"Dissasembled SPIR-V:");
-        Console.WriteLine(context.DisassembleSPIRV(words));
-    }
-}
-```
+This project wraps functionality from glslang into managed classes, which can be used to compile shader code with various options in a similar fashion to the native glslang interface.<br> However, it appropriately modifies the interface to fit naturally with C# and behaves accordingly. To see an example of usage, refer to [Example.cs](https://github.com/sinnwrig/Glslang.NET/blob/main/Example/Example.cs) in source.
 
 # Native Details
 
@@ -116,16 +12,15 @@ To support cross-platform compilation and to simplify the native build process, 
 
 ## Building Native Libraries
 
-To build native libraries, run `build_libraries.py`, specicying the target architecture with `-A [x86_64, arm64, all]` and the target platform with `-P [windows, linux, macos, all]`.<br>If the command is being run for the first time, it will download the glslang-zig source repository and any sub-dependencies.
-
+To build native libraries, run the `BuildNative.cs` file inside the _Native_ folder, specicying your target architecture [x64, arm64, all] with -A and your target platform [windows, linux, macos, all] with -P.
+ 
 Native build requirements:
-- Zig version 0.13.0 or higher.
-- Python 3 (Required for build_libraries.py, upgate_glslang_sources.py, gen_extension_headers.py. Future releases will aim to reduce and potentially cut off the dependency on python)
-
+- Zig compiler version 0.14.0-dev.1862+c96f9a017 present on your `PATH`. You can get the compiler from [Zig's download page](https://ziglang.org/download/) or [from a package manager](https://github.com/ziglang/zig/wiki/Install-Zig-from-a-Package-Manager)
+ 
 Pre-built binaries are bundled in the NuGet package for the following operating systems:
 - Windows x64
 - Windows arm64
 - OSX x64
-- OSX arm64
+- OSX arm64 (Apple silicon)
 - Linux x64
 - Linux arm64
