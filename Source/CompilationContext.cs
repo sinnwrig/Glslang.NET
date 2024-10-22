@@ -8,18 +8,20 @@ namespace Glslang.NET;
 /// </summary>
 public static class CompilationContext
 {
-    internal static List<WeakReference<IDisposable>> weakOnReload;
+    internal static List<WeakReference<IDisposable>> weakOnReload = [];
 
 
     static void Main() { }
 
 
-    static CompilationContext()
+    internal static void EnsureInitialized()
     {
         weakOnReload = [];
 
         if (GlslangNative.InitializeProcess() != 1)
             throw new FailedInitializationException("Failed to initialize glslang native process.");
+
+        Console.WriteLine("Initialized glslang process");
     }
 
 

@@ -25,6 +25,8 @@ public unsafe class Program : IDisposable
     /// </summary>
     public Program()
     {
+        CompilationContext.EnsureInitialized();
+
         program = GlslangNative.CreateProgram();
 
         CompilationContext.WeakOnReloadCallback(this);

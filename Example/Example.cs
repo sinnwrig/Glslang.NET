@@ -2,7 +2,7 @@
 
 namespace Application;
 
-public static class Example
+public static unsafe class Example
 {
     static IncludeResult IncludeFunction(string headerName, string includerName, uint depth, bool isSystemFile)
     {
@@ -35,8 +35,11 @@ public static class Example
             messages = MessageType.Default,
         };
 
+        Console.WriteLine("Creating shader");
+
         using Shader shader = new Shader(input);
 
+        Console.WriteLine("Created shader");
 
         if (!shader.Preprocess())
         {

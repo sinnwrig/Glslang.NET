@@ -56,7 +56,7 @@ public struct ShaderLimits
 
 /// <summary></summary>
 [StructLayout(LayoutKind.Sequential)]
-public struct ResourceLimits
+public unsafe struct ResourceLimits
 {
 
     /// <summary></summary>
@@ -367,6 +367,128 @@ public struct ResourceLimits
 
     /// <summary></summary>
     public ShaderLimits limits;
+
+
+    internal readonly void Set(ResourceLimits* limits)
+    {
+        if (limits == null)
+        {
+            throw new ArgumentNullException(nameof(limits));
+        }
+
+        limits->maxLights = maxLights;
+        limits->maxClipPlanes = maxClipPlanes;
+        limits->maxTextureUnits = maxTextureUnits;
+        limits->maxTextureCoords = maxTextureCoords;
+        limits->maxVertexAttribs = maxVertexAttribs;
+        limits->maxVertexUniformComponents = maxVertexUniformComponents;
+        limits->maxVaryingFloats = maxVaryingFloats;
+        limits->maxVertexTextureImageUnits = maxVertexTextureImageUnits;
+        limits->maxCombinedTextureImageUnits = maxCombinedTextureImageUnits;
+        limits->maxTextureImageUnits = maxTextureImageUnits;
+        limits->maxFragmentUniformComponents = maxFragmentUniformComponents;
+        limits->maxDrawBuffers = maxDrawBuffers;
+        limits->maxVertexUniformVectors = maxVertexUniformVectors;
+        limits->maxVaryingVectors = maxVaryingVectors;
+        limits->maxFragmentUniformVectors = maxFragmentUniformVectors;
+        limits->maxVertexOutputVectors = maxVertexOutputVectors;
+        limits->maxFragmentInputVectors = maxFragmentInputVectors;
+        limits->minProgramTexelOffset = minProgramTexelOffset;
+        limits->maxProgramTexelOffset = maxProgramTexelOffset;
+        limits->maxClipDistances = maxClipDistances;
+        limits->maxComputeWorkGroupCountX = maxComputeWorkGroupCountX;
+        limits->maxComputeWorkGroupCountY = maxComputeWorkGroupCountY;
+        limits->maxComputeWorkGroupCountZ = maxComputeWorkGroupCountZ;
+        limits->maxComputeWorkGroupSizeX = maxComputeWorkGroupSizeX;
+        limits->maxComputeWorkGroupSizeY = maxComputeWorkGroupSizeY;
+        limits->maxComputeWorkGroupSizeZ = maxComputeWorkGroupSizeZ;
+        limits->maxComputeUniformComponents = maxComputeUniformComponents;
+        limits->maxComputeTextureImageUnits = maxComputeTextureImageUnits;
+        limits->maxComputeImageUniforms = maxComputeImageUniforms;
+        limits->maxComputeAtomicCounters = maxComputeAtomicCounters;
+        limits->maxComputeAtomicCounterBuffers = maxComputeAtomicCounterBuffers;
+        limits->maxVaryingComponents = maxVaryingComponents;
+        limits->maxVertexOutputComponents = maxVertexOutputComponents;
+        limits->maxGeometryInputComponents = maxGeometryInputComponents;
+        limits->maxGeometryOutputComponents = maxGeometryOutputComponents;
+        limits->maxFragmentInputComponents = maxFragmentInputComponents;
+        limits->maxImageUnits = maxImageUnits;
+        limits->maxCombinedImageUnitsAndFragmentOutputs = maxCombinedImageUnitsAndFragmentOutputs;
+        limits->maxCombinedShaderOutputResources = maxCombinedShaderOutputResources;
+        limits->maxImageSamples = maxImageSamples;
+        limits->maxVertexImageUniforms = maxVertexImageUniforms;
+        limits->maxTessControlImageUniforms = maxTessControlImageUniforms;
+        limits->maxTessEvaluationImageUniforms = maxTessEvaluationImageUniforms;
+        limits->maxGeometryImageUniforms = maxGeometryImageUniforms;
+        limits->maxFragmentImageUniforms = maxFragmentImageUniforms;
+        limits->maxCombinedImageUniforms = maxCombinedImageUniforms;
+        limits->maxGeometryTextureImageUnits = maxGeometryTextureImageUnits;
+        limits->maxGeometryOutputVertices = maxGeometryOutputVertices;
+        limits->maxGeometryTotalOutputComponents = maxGeometryTotalOutputComponents;
+        limits->maxGeometryUniformComponents = maxGeometryUniformComponents;
+        limits->maxGeometryVaryingComponents = maxGeometryVaryingComponents;
+        limits->maxTessControlInputComponents = maxTessControlInputComponents;
+        limits->maxTessControlOutputComponents = maxTessControlOutputComponents;
+        limits->maxTessControlTextureImageUnits = maxTessControlTextureImageUnits;
+        limits->maxTessControlUniformComponents = maxTessControlUniformComponents;
+        limits->maxTessControlTotalOutputComponents = maxTessControlTotalOutputComponents;
+        limits->maxTessEvaluationInputComponents = maxTessEvaluationInputComponents;
+        limits->maxTessEvaluationOutputComponents = maxTessEvaluationOutputComponents;
+        limits->maxTessEvaluationTextureImageUnits = maxTessEvaluationTextureImageUnits;
+        limits->maxTessEvaluationUniformComponents = maxTessEvaluationUniformComponents;
+        limits->maxTessPatchComponents = maxTessPatchComponents;
+        limits->maxPatchVertices = maxPatchVertices;
+        limits->maxTessGenLevel = maxTessGenLevel;
+        limits->maxViewports = maxViewports;
+        limits->maxVertexAtomicCounters = maxVertexAtomicCounters;
+        limits->maxTessControlAtomicCounters = maxTessControlAtomicCounters;
+        limits->maxTessEvaluationAtomicCounters = maxTessEvaluationAtomicCounters;
+        limits->maxGeometryAtomicCounters = maxGeometryAtomicCounters;
+        limits->maxFragmentAtomicCounters = maxFragmentAtomicCounters;
+        limits->maxCombinedAtomicCounters = maxCombinedAtomicCounters;
+        limits->maxAtomicCounterBindings = maxAtomicCounterBindings;
+        limits->maxVertexAtomicCounterBuffers = maxVertexAtomicCounterBuffers;
+        limits->maxTessControlAtomicCounterBuffers = maxTessControlAtomicCounterBuffers;
+        limits->maxTessEvaluationAtomicCounterBuffers = maxTessEvaluationAtomicCounterBuffers;
+        limits->maxGeometryAtomicCounterBuffers = maxGeometryAtomicCounterBuffers;
+        limits->maxFragmentAtomicCounterBuffers = maxFragmentAtomicCounterBuffers;
+        limits->maxCombinedAtomicCounterBuffers = maxCombinedAtomicCounterBuffers;
+        limits->maxAtomicCounterBufferSize = maxAtomicCounterBufferSize;
+        limits->maxTransformFeedbackBuffers = maxTransformFeedbackBuffers;
+        limits->maxTransformFeedbackInterleavedComponents = maxTransformFeedbackInterleavedComponents;
+        limits->maxCullDistances = maxCullDistances;
+        limits->maxCombinedClipAndCullDistances = maxCombinedClipAndCullDistances;
+        limits->maxSamples = maxSamples;
+        limits->maxMeshOutputVerticesNV = maxMeshOutputVerticesNV;
+        limits->maxMeshOutputPrimitivesNV = maxMeshOutputPrimitivesNV;
+        limits->maxMeshWorkGroupSizeX_NV = maxMeshWorkGroupSizeX_NV;
+        limits->maxMeshWorkGroupSizeY_NV = maxMeshWorkGroupSizeY_NV;
+        limits->maxMeshWorkGroupSizeZ_NV = maxMeshWorkGroupSizeZ_NV;
+        limits->maxTaskWorkGroupSizeX_NV = maxTaskWorkGroupSizeX_NV;
+        limits->maxTaskWorkGroupSizeY_NV = maxTaskWorkGroupSizeY_NV;
+        limits->maxTaskWorkGroupSizeZ_NV = maxTaskWorkGroupSizeZ_NV;
+        limits->maxMeshViewCountNV = maxMeshViewCountNV;
+        limits->maxMeshOutputVerticesEXT = maxMeshOutputVerticesEXT;
+        limits->maxMeshOutputPrimitivesEXT = maxMeshOutputPrimitivesEXT;
+        limits->maxMeshWorkGroupSizeX_EXT = maxMeshWorkGroupSizeX_EXT;
+        limits->maxMeshWorkGroupSizeY_EXT = maxMeshWorkGroupSizeY_EXT;
+        limits->maxMeshWorkGroupSizeZ_EXT = maxMeshWorkGroupSizeZ_EXT;
+        limits->maxTaskWorkGroupSizeX_EXT = maxTaskWorkGroupSizeX_EXT;
+        limits->maxTaskWorkGroupSizeY_EXT = maxTaskWorkGroupSizeY_EXT;
+        limits->maxTaskWorkGroupSizeZ_EXT = maxTaskWorkGroupSizeZ_EXT;
+        limits->maxMeshViewCountEXT = maxMeshViewCountEXT;
+        limits->maxDualSourceDrawBuffersEXT = maxDualSourceDrawBuffersEXT;
+
+        limits->limits.nonInductiveForLoops = this.limits.nonInductiveForLoops;
+        limits->limits.whileLoops = this.limits.whileLoops;
+        limits->limits.doWhileLoops = this.limits.doWhileLoops;
+        limits->limits.generalUniformIndexing = this.limits.generalUniformIndexing;
+        limits->limits.generalAttributeMatrixVectorIndexing = this.limits.generalAttributeMatrixVectorIndexing;
+        limits->limits.generalVaryingIndexing = this.limits.generalVaryingIndexing;
+        limits->limits.generalSamplerIndexing = this.limits.generalSamplerIndexing;
+        limits->limits.generalVariableIndexing = this.limits.generalVariableIndexing;
+        limits->limits.generalConstantMatrixVectorIndexing = this.limits.generalConstantMatrixVectorIndexing;
+    }
 
 
     /// <summary>

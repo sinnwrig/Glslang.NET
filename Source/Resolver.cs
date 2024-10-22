@@ -21,6 +21,8 @@ public unsafe class Resolver : IDisposable
     /// <summary></summary>
     public Resolver(Program program, ShaderStage stage)
     {
+        CompilationContext.EnsureInitialized();
+
         if (program.IsDisposed)
             throw ProgramDisposedException.Disposed;
 

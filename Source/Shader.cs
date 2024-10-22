@@ -40,9 +40,12 @@ public unsafe class Shader : IDisposable
     /// <param name="input"></param>
     public Shader(CompilationInput input)
     {
+        nativeInputPtr = NativeInput.Allocate(input);
+
+        CompilationContext.EnsureInitialized();
+
         this.input = input;
 
-        nativeInputPtr = NativeInput.Allocate(input);
         shader = GlslangNative.CreateShader(nativeInputPtr);
 
         CompilationContext.WeakOnReloadCallback(this);

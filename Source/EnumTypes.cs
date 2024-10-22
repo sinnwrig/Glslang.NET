@@ -4,7 +4,7 @@ namespace Glslang.NET;
 /// <summary>
 /// Target shader pipeline stages. 
 /// </summary>
-public enum ShaderStage 
+public enum ShaderStage : int
 {
     /// <summary></summary>
     Vertex,
@@ -51,7 +51,7 @@ public enum ShaderStage
 
 
 /// <summary></summary>
-public enum LanguageMask 
+public enum LanguageMask : int
 {
     /// <summary></summary>
     VertexMask = 1 << ShaderStage.Vertex,
@@ -100,7 +100,7 @@ public enum LanguageMask
 /// <summary>
 /// Shader source code language types.
 /// </summary>
-public enum SourceType 
+public enum SourceType : int
 {
     /// <summary>
     /// Unknown language type
@@ -122,7 +122,7 @@ public enum SourceType
 /// <summary>
 /// Shader target client type.
 /// </summary>
-public enum ClientType 
+public enum ClientType : int
 {
     /// <summary>
     /// Unknown client type.
@@ -144,7 +144,7 @@ public enum ClientType
 /// <summary>
 /// Shader target language type.
 /// </summary>
-public enum TargetLanguage 
+public enum TargetLanguage : int
 {
     /// <summary>
     /// Unknown language type.
@@ -161,7 +161,7 @@ public enum TargetLanguage
 /// <summary>
 /// Shader target client version.
 /// </summary>
-public enum TargetClientVersion 
+public enum TargetClientVersion : int
 {
     /// <summary>
     /// Vulkan version 1.0
@@ -193,7 +193,7 @@ public enum TargetClientVersion
 /// <summary>
 /// Shader target language version.
 /// </summary>
-public enum TargetLanguageVersion 
+public enum TargetLanguageVersion : int
 {
     /// <summary>
     /// SPIR-V version 1.0
@@ -204,7 +204,7 @@ public enum TargetLanguageVersion
     /// SPIR-V version 1.1
     /// </summary>
     SPV_1_1 = (1 << 16) | (1 << 8),
-    
+
     /// <summary>
     /// SPIR-V version 1.2
     /// </summary>
@@ -219,12 +219,12 @@ public enum TargetLanguageVersion
     /// SPIR-V version 1.4
     /// </summary>
     SPV_1_4 = (1 << 16) | (4 << 8),
-    
+
     /// <summary>
     /// SPIR-V version 1.5
     /// </summary>
     SPV_1_5 = (1 << 16) | (5 << 8),
-    
+
     /// <summary>
     /// SPIR-V version 1.6
     /// </summary>
@@ -233,18 +233,18 @@ public enum TargetLanguageVersion
 
 
 /// <summary></summary>
-public enum ExecutableType 
-{ 
+public enum ExecutableType : int
+{
     /// <summary></summary>
-    VertexFragment, 
+    VertexFragment,
 
     /// <summary></summary>
-    Fragment 
+    Fragment
 }
 
 
 /// <summary></summary>
-public enum TextureSamplerTransformMode 
+public enum TextureSamplerTransformMode : int
 {
     /// <summary></summary>
     Keep,
@@ -258,67 +258,67 @@ public enum TextureSamplerTransformMode
 /// Bit-flag of shader compilation message types.
 /// </summary>
 [Flags]
-public enum MessageType 
+public enum MessageType : int
 {
     /// <summary></summary>
-    Default                 = 0,
+    Default = 0,
 
     /// <summary></summary>
-    RelaxedErrors           = 1 << 0,
+    RelaxedErrors = 1 << 0,
 
     /// <summary></summary>
-    SuppressWarnings        = 1 << 1,
+    SuppressWarnings = 1 << 1,
 
     /// <summary></summary>
-    AST                     = 1 << 2,
-    
-    /// <summary></summary>
-    SPVRules                = 1 << 3,
+    AST = 1 << 2,
 
     /// <summary></summary>
-    VulkanRules             = 1 << 4,
+    SPVRules = 1 << 3,
 
     /// <summary></summary>
-    OnlyPreprocessor        = 1 << 5,
+    VulkanRules = 1 << 4,
 
     /// <summary></summary>
-    ReadHLSL                = 1 << 6,
+    OnlyPreprocessor = 1 << 5,
 
     /// <summary></summary>
-    CascadingErrors         = 1 << 7,
+    ReadHLSL = 1 << 6,
 
     /// <summary></summary>
-    KeepUncalled            = 1 << 8,
+    CascadingErrors = 1 << 7,
 
     /// <summary></summary>
-    HLSLOffsets             = 1 << 9,
+    KeepUncalled = 1 << 8,
 
     /// <summary></summary>
-    DebugInfo               = 1 << 10,
+    HLSLOffsets = 1 << 9,
 
     /// <summary></summary>
-    Enable16BitHLSLTypes    = 1 << 11,
+    DebugInfo = 1 << 10,
 
     /// <summary></summary>
-    LegalizeHLSL            = 1 << 12,
+    Enable16BitHLSLTypes = 1 << 11,
 
     /// <summary></summary>
-    DX9CompatibleHLSL       = 1 << 13,
+    LegalizeHLSL = 1 << 12,
 
     /// <summary></summary>
-    BuiltinSymbolTable      = 1 << 14,
+    DX9CompatibleHLSL = 1 << 13,
 
     /// <summary></summary>
-    Enhanced                = 1 << 15,
+    BuiltinSymbolTable = 1 << 14,
 
     /// <summary></summary>
-    AbsolutePath            = 1 << 16,
+    Enhanced = 1 << 15,
+
+    /// <summary></summary>
+    AbsolutePath = 1 << 16,
 }
 
 
 /// <summary></summary>
 [Flags]
-public enum ReflectionOptions 
+public enum ReflectionOptions : int
 {
     /// <summary></summary>
     Default = 0,
@@ -343,7 +343,7 @@ public enum ReflectionOptions
 
     /// <summary></summary>
     AllIOVariables = 1 << 6,
-    
+
     /// <summary></summary>
     SharedSTD140_SSBO = 1 << 7,
 
@@ -353,7 +353,7 @@ public enum ReflectionOptions
 
 
 /// <summary></summary>
-public enum ShaderProfile 
+public enum ShaderProfile : int
 {
     /// <summary></summary>
     Bad = 0,
@@ -373,7 +373,7 @@ public enum ShaderProfile
 
 
 /// <summary></summary>
-public enum ShaderOptions
+public enum ShaderOptions : int
 {
     /// <summary></summary>
     Default = 0,
@@ -386,11 +386,11 @@ public enum ShaderOptions
 
     /// <summary></summary>
     VulkanRulesRelaxed = 1 << 2,
-} 
+}
 
 
 /// <summary></summary>
-public enum ResourceType 
+public enum ResourceType : int
 {
     /// <summary></summary>
     Sampler,

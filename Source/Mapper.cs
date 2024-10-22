@@ -21,6 +21,8 @@ public unsafe class Mapper : IDisposable
     /// <summary></summary>
     public Mapper()
     {
+        CompilationContext.EnsureInitialized();
+
         mapper = GlslangNative.CreateMapper();
 
         CompilationContext.WeakOnReloadCallback(this);
