@@ -3,186 +3,151 @@ using System.Runtime.InteropServices;
 namespace Glslang.NET;
 
 
-[StructLayout(LayoutKind.Sequential)]
-internal struct CompilationInputNative 
+[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+internal unsafe struct NativeInput
 {
     public SourceType language;
     public ShaderStage stage;
     public ClientType client;
-    public TargetClientVersion clientVersion;
-    public TargetLanguage targetLanguage;
-    public TargetLanguageVersion targetLanguageVersion;
-    public IntPtr code;
-    public IntPtr entrypoint;
-    public IntPtr sourceEntrypoint;
-    public bool invertY;
-    public int defaultVersion;
-    public ShaderProfile defaultProfile;
-    public int forceDefaultVersionAndProfile;
-    public int forwardCompatible;
+    public TargetClientVersion client_version;
+    public TargetLanguage target_language;
+    public TargetLanguageVersion target_language_version;
+
+    public byte* code;
+    public byte* entrypoint;
+    public byte* source_entrypoint;
+
+    public bool invert_y;
+    public int default_version;
+    public ShaderProfile default_profile;
+    public int force_default_version_and_profile;
+    public int forward_compatible;
     public MessageType messages;
-    public IntPtr resource;
-    public IncludeCallbacksNative callbacks;
-    public IntPtr callbacksCtx;
+    public ResourceLimits* resource;
+    public NativeIncludeCallbacks callbacks;
+    public void* callbacks_ctx;
 
 
-    internal static IntPtr GetPtrForCompilationInput(CompilationInput input)
+    internal static NativeInput* Allocate(CompilationInput input)
     {
-        CompilationInputNative nativeInput;
-        nativeInput.language = input.language;
-        nativeInput.stage = input.stage;
-        nativeInput.client = input.client;
-        nativeInput.clientVersion = input.clientVersion;
-        nativeInput.targetLanguage = input.targetLanguage;
-        nativeInput.targetLanguageVersion = input.targetLanguageVersion;
+        NativeInput* nativeInput = GlslangNative.Allocate<NativeInput>();
 
-        nativeInput.code = NativeStringUtility.AllocUTF8Ptr(input.code, out _, true);
-        nativeInput.entrypoint = NativeStringUtility.AllocUTF8Ptr(input.entrypoint ?? "main", out _, true);
-        nativeInput.sourceEntrypoint = NativeStringUtility.AllocUTF8Ptr(input.sourceEntrypoint ?? "main", out _, true);
+        nativeInput->language = input.language;
+        nativeInput->stage = input.stage;
+        nativeInput->client = input.client;
+        nativeInput->client_version = input.clientVersion;
+        nativeInput->target_language = input.targetLanguage;
+        nativeInput->target_language_version = input.targetLanguageVersion;
 
-        nativeInput.invertY = input.invertY;
-        nativeInput.defaultVersion = input.defaultVersion;
-        nativeInput.defaultProfile = input.defaultProfile;
-        nativeInput.forceDefaultVersionAndProfile = input.forceDefaultVersionAndProfile ? 1 : 0;
-        nativeInput.forwardCompatible = input.forwardCompatible ? 1 : 0;
-        nativeInput.messages = input.messages ?? MessageType.Default;
+        nativeInput->code = NativeUtil.AllocUTF8Ptr(input.code, out _, true);
+        nativeInput->entrypoint = NativeUtil.AllocUTF8Ptr(input.entrypoint ?? "main", out _, true);
+        nativeInput->source_entrypoint = NativeUtil.AllocUTF8Ptr(input.sourceEntrypoint ?? "main", out _, true);
+
+        nativeInput->invert_y = input.invertY;
+        nativeInput->default_version = input.defaultVersion;
+        nativeInput->default_profile = input.defaultProfile;
+        nativeInput->force_default_version_and_profile = input.forceDefaultVersionAndProfile ? 1 : 0;
+        nativeInput->forward_compatible = input.forwardCompatible ? 1 : 0;
+        nativeInput->messages = input.messages ?? MessageType.Default;
 
         // Allocate resource limits
-        nativeInput.resource = Marshal.AllocHGlobal(Marshal.SizeOf<ResourceLimits>());
-        Marshal.StructureToPtr(input.resourceLimits ?? ResourceLimits.DefaultResource, nativeInput.resource, false);
+        nativeInput->resource = GlslangNative.Allocate<ResourceLimits>(input.resourceLimits ?? ResourceLimits.DefaultResource);
 
-        nativeInput.callbacks.includeLocal = IncludeCallbacksNative.LocalFuncPtr;
-        nativeInput.callbacks.includeSystem = IncludeCallbacksNative.SystemFuncPtr;
-        nativeInput.callbacks.freeIncludeResult = IncludeCallbacksNative.FreeFuncPtr;
-        nativeInput.callbacksCtx = input.fileIncluder != null ? Marshal.GetFunctionPointerForDelegate(input.fileIncluder) : IntPtr.Zero;
+        nativeInput->callbacks.include_local = IncludeLocalPtr;
+        nativeInput->callbacks.include_system = IncludeSystemPtr;
+        nativeInput->callbacks.free_include_result = FreeIncludePtr;
+        nativeInput->callbacks_ctx = (void*)(input.fileIncluder != null ? Marshal.GetFunctionPointerForDelegate(input.fileIncluder) : IntPtr.Zero);
 
-        // Allocate compiler input
-        IntPtr inputPtr = Marshal.AllocHGlobal(Marshal.SizeOf<CompilationInputNative>());
-        Marshal.StructureToPtr(nativeInput, inputPtr, false);
-        return inputPtr;
+        return nativeInput;
     }
 
 
-    internal static void ReleasePtrForCompilationInput(IntPtr inputPtr)
-    {   
-        CompilationInputNative nativeInput = Marshal.PtrToStructure<CompilationInputNative>(inputPtr);
-
-        Marshal.FreeHGlobal(nativeInput.code);
-        Marshal.FreeHGlobal(nativeInput.entrypoint);
-        Marshal.FreeHGlobal(nativeInput.sourceEntrypoint);
-
-        Marshal.FreeHGlobal(nativeInput.resource);
-
-        Marshal.FreeHGlobal(inputPtr);
-    }
-}
-
-
-[StructLayout(LayoutKind.Sequential)]
-internal struct IncludeCallbacksNative 
-{
-    internal IntPtr includeSystem;
-    internal IntPtr includeLocal;
-    internal IntPtr freeIncludeResult;
-
-
-    internal static readonly IncludeCallbacksNative DefaultCallbacks = new() 
+    internal static void Free(NativeInput* inputPtr)
     {
-        includeSystem = SystemFuncPtr,
-        includeLocal = LocalFuncPtr,
-        freeIncludeResult = FreeFuncPtr,
-    };
+        GlslangNative.Free(inputPtr->code);
+        GlslangNative.Free(inputPtr->entrypoint);
+        GlslangNative.Free(inputPtr->source_entrypoint);
 
+        GlslangNative.Free(inputPtr->resource);
 
-    private delegate IntPtr IncludeFunctionNative(IntPtr context, IntPtr headerNameUTF8, IntPtr includerNameUTF8, nuint includeDepth);
-    private delegate int FreeFunctionNative(IntPtr context, IntPtr includeResult);
-
-
-    private static IntPtr NativeIncluder(IntPtr context, IntPtr headerPtr, IntPtr includerPtr, nuint depth, bool system)
-    {
-        string headerStr = Marshal.PtrToStringUTF8(headerPtr) ?? string.Empty;
-        string includerStr = Marshal.PtrToStringUTF8(includerPtr) ?? string.Empty; 
-
-        if (context == IntPtr.Zero)
-            return IncludeResultNative.CreateNative(string.Empty, string.Empty);
-
-        FileIncluder includer = Marshal.GetDelegateForFunctionPointer<FileIncluder>(context);
-        IncludeResult result = includer.Invoke(headerStr, includerStr, (uint)depth, system);
-        
-        return IncludeResultNative.CreateNative(result.headerName, result.headerData);
+        GlslangNative.Free(inputPtr);
     }
 
 
-    // Redirect native includer to local file delegate
-    internal static readonly IntPtr LocalFuncPtr = Marshal.GetFunctionPointerForDelegate<IncludeFunctionNative>(IncludeFunctionLocal);
-
-    private static IntPtr IncludeFunctionLocal(IntPtr context, IntPtr headerPtr, IntPtr includerPtr, nuint depth) => 
-        NativeIncluder(context, headerPtr, includerPtr, depth, false);
-
-
-    // Redirect native includer to system file delegate
-    internal static readonly IntPtr SystemFuncPtr = Marshal.GetFunctionPointerForDelegate<IncludeFunctionNative>(IncludeFunctionSystem);
-
-    private static IntPtr IncludeFunctionSystem(IntPtr context, IntPtr headerPtr, IntPtr includerPtr, nuint depth) => 
-        NativeIncluder(context, headerPtr, includerPtr, depth, true);
-
-
-    // Free allocated include results
-    internal static readonly IntPtr FreeFuncPtr = Marshal.GetFunctionPointerForDelegate<FreeFunctionNative>(FreeFunction);
-    private static int FreeFunction(IntPtr context, IntPtr result)
+    private static readonly void* IncludeLocalPtr = (void*)Marshal.GetFunctionPointerForDelegate(IncludeLocal);
+    internal static NativeGLSLIncludeResult* IncludeLocal(void* context, byte* headerName, byte* includerName, nuint includeDepth)
     {
-        if (result == IntPtr.Zero)
-            return 1;
-
-        IncludeResultNative.FreeNative(result);
-
-        return 0;
+        return Include(context, headerName, includerName, includeDepth, false);
     }
-}
 
 
-[StructLayout(LayoutKind.Sequential)]
-internal struct IncludeResultNative 
-{
-    private IntPtr headerName;
-    private IntPtr headerData;
-    private nuint headerLength;
-
-
-    internal static IntPtr CreateNative(string headerName, string headerData)
+    private static readonly void* IncludeSystemPtr = (void*)Marshal.GetFunctionPointerForDelegate(IncludeSystem);
+    internal static NativeGLSLIncludeResult* IncludeSystem(void* context, byte* headerName, byte* includerName, nuint includeDepth)
     {
-        IncludeResultNative resultNative;
+        return Include(context, headerName, includerName, includeDepth, true);
+    }
 
-        if (!string.IsNullOrWhiteSpace(headerName) && !string.IsNullOrWhiteSpace(headerData))
-        {
-            resultNative.headerName = NativeStringUtility.AllocUTF8Ptr(headerName, out _, true);
-            resultNative.headerData = NativeStringUtility.AllocUTF8Ptr(headerData, out uint headerLen, false);
-            resultNative.headerLength = headerLen;
-        }
-        else
-        {
-            resultNative.headerName = IntPtr.Zero;
-            resultNative.headerData = IntPtr.Zero;
-            resultNative.headerLength = 0;
-        }
 
-        IntPtr resultPtr = Marshal.AllocHGlobal(Marshal.SizeOf<IncludeResultNative>());
-        Marshal.StructureToPtr(resultNative, resultPtr, false);
+    private static NativeGLSLIncludeResult* Include(void* context, byte* headerName, byte* includerName, nuint includeDepth, bool isSystemFile)
+    {
+        FileIncluder includer = context != null ? Marshal.GetDelegateForFunctionPointer<FileIncluder>((nint)context) : DefaultIncluder;
+
+        IncludeResult result = includer.Invoke(
+            Marshal.PtrToStringUTF8((nint)headerName) ?? "",
+            Marshal.PtrToStringUTF8((nint)includerName) ?? "",
+            (uint)includeDepth,
+            isSystemFile);
+
+        NativeGLSLIncludeResult* resultPtr = GlslangNative.Allocate<NativeGLSLIncludeResult>();
+        resultPtr->header_name = NativeUtil.AllocUTF8Ptr(result.headerName, out _, true);
+        resultPtr->header_data = NativeUtil.AllocUTF8Ptr(result.headerData, out uint len, false);
+        resultPtr->header_length = len;
 
         return resultPtr;
     }
 
 
-    internal static void FreeNative(IntPtr resultPtr)
+    private static readonly void* FreeIncludePtr = (void*)Marshal.GetFunctionPointerForDelegate(FreeInclude);
+    internal static int FreeInclude(void* context, NativeGLSLIncludeResult* result)
     {
-        IncludeResultNative resultNative = Marshal.PtrToStructure<IncludeResultNative>(resultPtr);
+        GlslangNative.Free(result->header_name);
+        GlslangNative.Free(result->header_data);
 
-        if (resultNative.headerName != IntPtr.Zero)
-            Marshal.FreeHGlobal(resultNative.headerName); 
-        
-        if (resultNative.headerData != IntPtr.Zero)
-            Marshal.FreeHGlobal(resultNative.headerData); 
+        GlslangNative.Free(result);
 
-        Marshal.FreeHGlobal(resultPtr);
+        return 0;
     }
+
+
+    private static IncludeResult DefaultIncluder(string header, string includer, uint depth, bool isSystemFile)
+    {
+        IncludeResult result = new()
+        {
+            headerName = header,
+            headerData = ""
+        };
+
+        return result;
+    }
+}
+
+
+[StructLayout(LayoutKind.Sequential)]
+internal unsafe struct NativeGLSLIncludeResult
+{
+    /* Header file name or NULL if inclusion failed */
+    public byte* header_name;
+
+    /* Header contents or NULL */
+    public byte* header_data;
+    public nuint header_length;
+}
+
+
+[StructLayout(LayoutKind.Sequential)]
+internal unsafe struct NativeIncludeCallbacks
+{
+    public void* include_system;
+    public void* include_local;
+    public void* free_include_result;
 }

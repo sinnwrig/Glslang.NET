@@ -4,18 +4,17 @@ using System.Runtime.InteropServices;
 namespace Glslang.NET;
 
 
-internal static class NativeStringUtility
+internal static unsafe class NativeUtil
 {
-    private static IntPtr AllocBytePtr(byte[] bytes, out uint len)
+    private static byte* AllocBytePtr(byte[] bytes, out uint len)
     {
         len = (uint)bytes.Length;
 
         IntPtr nativePtr = Marshal.AllocHGlobal((int)len);
         Marshal.Copy(bytes, 0, nativePtr, (int)len);
 
-        return nativePtr;
+        return (byte*)nativePtr;
     }
-
 
     private static string Sanitize(string str, bool nullTerminate)
     {
@@ -25,45 +24,14 @@ internal static class NativeStringUtility
         return str;
     }
 
-
-    internal static byte[] GetASCIIBytes(string str, bool nullTerminate = true)
-    {
-        return Encoding.ASCII.GetBytes(Sanitize(str, nullTerminate));
-    }
-
-
     internal static byte[] GetUTF8Bytes(string str, bool nullTerminate = true)
     {
         return Encoding.UTF8.GetBytes(Sanitize(str, nullTerminate));
     }
 
-
-    internal static byte[] GetUTF16Bytes(string str, bool nullTerminate = true, bool bigEndian = false)
-    {
-        str = Sanitize(str, nullTerminate);
-
-        if (bigEndian)
-            return Encoding.BigEndianUnicode.GetBytes(str);
-        
-        return Encoding.Unicode.GetBytes(str);
-    }
-
-
-    internal static byte[] GetUTF32Bytes(string str, bool nullTerminate = true)
-    {
-        return Encoding.UTF32.GetBytes(Sanitize(str, nullTerminate));
-    }
-
-
-    internal static IntPtr AllocASCIIPtr(string str, out uint len, bool nullTerminate = true) => 
-        AllocBytePtr(GetASCIIBytes(str, nullTerminate), out len);
-
-    internal static IntPtr AllocUTF8Ptr(string str, out uint len, bool nullTerminate = true) => 
+    internal static byte* AllocUTF8Ptr(string str, out uint len, bool nullTerminate = true) =>
         AllocBytePtr(GetUTF8Bytes(str, nullTerminate), out len);
 
-    internal static IntPtr AllocUTF16Ptr(string str, out uint len, bool nullTerminate = true, bool bigEndian = false) => 
-        AllocBytePtr(GetUTF16Bytes(str, nullTerminate, bigEndian), out len);
-
-    internal static IntPtr AllocUTF32Ptr(string str, out uint len, bool nullTerminate = true) => 
-        AllocBytePtr(GetUTF32Bytes(str, nullTerminate), out len);
+    internal static string GetUtf8(byte* utf8Bytes)
+        => Marshal.PtrToStringUTF8((nint)utf8Bytes) ?? "";
 }

@@ -34,17 +34,14 @@ public static class CompilationContext
     /// </summary>
     /// <param name="spirvWords">Binary buffer of SPIR-V words.</param>
     /// <returns>String containing human-readable SPIR-V instructions.</returns>
-    public static string DisassembleSPIRV(byte[] spirvWords)
+    public static string DisassembleSPIRV(uint[] spirvWords)
     {
-        IntPtr textPtr = GlslangNative.DisassembleSPIRV(spirvWords, (nuint)(spirvWords.Length / sizeof(uint)));
-        string text = Marshal.PtrToStringUTF8(textPtr) ?? string.Empty;
-        Marshal.FreeHGlobal(textPtr);
-        return text;
+        return GlslangNative.DisassembleSPIRV(spirvWords, (uint)spirvWords.Length);
     }
 
 
     /// <summary>
-    /// Dispose of allocated shader resources and programs, and finalize the native process.
+    /// Dispose of allocated shader resources and programs, and finalize the native process before reinitializing it.
     /// </summary>
     public static void ReloadNativeProcess()
     {

@@ -1,6 +1,9 @@
 public static class ShaderCode
 {
     public const string HlslCode = @"
+#include ""SomeFile.hlsl""
+#include <SomeOtherFile.hlsl>
+
 struct VertexInput
 {
     float2 Position : POSITION;
@@ -14,10 +17,13 @@ struct VertexOutput
 };
 
 
+float4 SomeValues;
+
+
 VertexOutput vertex(VertexInput input)
 {
     VertexOutput output;
-    output.Position = float4(input.Position, 0, 1);
+    output.Position = float4(input.Position, 0, 1) * SomeValues;
     output.Color = input.Color;
     return output;
 }

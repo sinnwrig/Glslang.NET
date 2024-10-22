@@ -9,9 +9,15 @@ namespace Glslang.NET;
 /// </summary>
 public unsafe class Program : IDisposable
 {
-    readonly NativeProgram* program;
+    internal readonly NativeProgram* program;
 
-    private bool isDisposed;
+    /// <summary>
+    /// Has this <see cref="Program"/> been disposed?
+    /// <para>
+    /// Using this instance when this value is true is not allowed and will throw exceptions.
+    /// </para>
+    /// </summary>
+    public bool IsDisposed { get; private set; }
 
 
     /// <summary>
@@ -30,10 +36,10 @@ public unsafe class Program : IDisposable
     /// </summary>
     public void Dispose()
     {
-        if (isDisposed)
+        if (IsDisposed)
             return;
 
-        isDisposed = true;
+        IsDisposed = true;
         GlslangNative.DeleteProgram(program);
         GC.SuppressFinalize(this);
     }
@@ -52,10 +58,10 @@ public unsafe class Program : IDisposable
     /// <param name="shader">The shader to add.</param>
     public void AddShader(Shader shader)
     {
-        if (isDisposed)
+        if (IsDisposed)
             throw ProgramDisposedException.Disposed;
 
-        if (shader.isDisposed)
+        if (shader.IsDisposed)
             throw ShaderDisposedException.Disposed;
 
         GlslangNative.AddShaderToProgram(program, shader.shader);
@@ -69,7 +75,7 @@ public unsafe class Program : IDisposable
     /// <returns>True if linking succeeded.</returns>
     public bool Link(MessageType messages)
     {
-        if (isDisposed)
+        if (IsDisposed)
             throw ProgramDisposedException.Disposed;
 
         return GlslangNative.LinkProgram(program, messages) == 1;
@@ -81,12 +87,14 @@ public unsafe class Program : IDisposable
     /// </summary>
     public void AddSourceText(ShaderStage stage, string text)
     {
-        if (isDisposed)
+        if (IsDisposed)
             throw ProgramDisposedException.Disposed;
 
-        IntPtr textPtr = NativeStringUtility.AllocUTF8Ptr(text, out uint length, false);
+        ArgumentNullException.ThrowIfNull(text);
+
+        byte* textPtr = NativeUtil.AllocUTF8Ptr(text, out uint length, false);
         GlslangNative.AddProgramSourceText(program, stage, textPtr, length);
-        Marshal.FreeHGlobal(textPtr);
+        GlslangNative.Free(textPtr);
     }
 
 
@@ -95,12 +103,12 @@ public unsafe class Program : IDisposable
     /// </summary>
     public void SetSourceFile(ShaderStage stage, string file)
     {
-        if (isDisposed)
+        if (IsDisposed)
             throw ProgramDisposedException.Disposed;
 
-        IntPtr filePtr = NativeStringUtility.AllocUTF8Ptr(file, out _, true);
-        GlslangNative.SetProgramSourceFile(program, stage, filePtr);
-        Marshal.FreeHGlobal(filePtr);
+        ArgumentNullException.ThrowIfNull(file);
+
+        GlslangNative.SetProgramSourceFile(program, stage, file);
     }
 
 
@@ -110,10 +118,29 @@ public unsafe class Program : IDisposable
     /// <returns>True if mapping succeeded.</returns>
     public bool MapIO()
     {
-        if (isDisposed)
+        if (IsDisposed)
             throw ProgramDisposedException.Disposed;
 
         return GlslangNative.MapProgramIO(program) == 1;
+    }
+
+
+    /// <summary>
+    /// Map the program's imputs and outputs.
+    /// </summary>
+    /// <returns>True if mapping succeeded.</returns>
+    public bool MapIO(Mapper mapper, Resolver resolver)
+    {
+        if (IsDisposed)
+            throw ProgramDisposedException.Disposed;
+
+        if (mapper.IsDisposed)
+            throw MapperDisposedException.Disposed;
+
+        if (resolver.IsDisposed)
+            throw ResolverDisposedException.Disposed;
+
+        return GlslangNative.MapProgramIOWithResolverAndMapper(program, resolver.resolver, mapper.mapper) == 1;
     }
 
 
@@ -128,17 +155,16 @@ public unsafe class Program : IDisposable
     /// <param name="stage">The shader stage to output.</param>
     /// <param name="options">The generation options to use.</param>
     /// <returns>True if generation succeeded.</returns>
-    public bool GenerateSPIRV(out byte[] SPIRVWords, ShaderStage stage, SPIRVOptions? options = null)
+    public bool GenerateSPIRV(out uint[] SPIRVWords, ShaderStage stage, SPIRVOptions? options = null)
     {
-        if (isDisposed)
+        if (IsDisposed)
             throw ProgramDisposedException.Disposed;
 
         if (options != null)
         {
-            IntPtr optionsPtr = Marshal.AllocHGlobal(Marshal.SizeOf<SPIRVOptions>());
-            Marshal.StructureToPtr(options.Value, optionsPtr, false);
-            GlslangNative.GenerateProgramSPIRVWithOptiosn(program, stage, optionsPtr);
-            Marshal.FreeHGlobal(optionsPtr);
+            SPIRVOptions* optionsPtr = GlslangNative.Allocate(options.Value);
+            GlslangNative.GenerateProgramSPIRVWithOptions(program, stage, optionsPtr);
+            GlslangNative.Free(optionsPtr);
             GlslangNative.GenerateProgramSPIRV(program, stage);
         }
         else
@@ -147,7 +173,7 @@ public unsafe class Program : IDisposable
         }
 
         nuint size = GlslangNative.GetProgramSPIRVSize(program);
-        SPIRVWords = new byte[(int)size * sizeof(uint)];
+        SPIRVWords = new uint[(int)size];
         GlslangNative.GetProgramSPIRVBuffer(program, SPIRVWords);
 
         generatedSPIRV = true;
@@ -162,7 +188,7 @@ public unsafe class Program : IDisposable
     /// <exception cref="InvalidOperationException"></exception>
     public string GetSPIRVMessages()
     {
-        if (isDisposed)
+        if (IsDisposed)
             throw ProgramDisposedException.Disposed;
 
         if (!generatedSPIRV)
@@ -173,8 +199,7 @@ public unsafe class Program : IDisposable
             );
         }
 
-        IntPtr SPIRVMessagesPtr = GlslangNative.GetProgramSPIRVMessages(program);
-        return Marshal.PtrToStringUTF8(SPIRVMessagesPtr) ?? string.Empty;
+        return NativeUtil.GetUtf8(GlslangNative.GetProgramSPIRVMessages(program));
     }
 
 
@@ -183,11 +208,10 @@ public unsafe class Program : IDisposable
     /// </summary>
     public string GetInfoLog()
     {
-        if (isDisposed)
+        if (IsDisposed)
             throw ProgramDisposedException.Disposed;
 
-        IntPtr infoLogPtr = GlslangNative.GetProgramInfoDebugLog(program);
-        return Marshal.PtrToStringUTF8(infoLogPtr) ?? string.Empty;
+        return NativeUtil.GetUtf8(GlslangNative.GetProgramInfoDebugLog(program));
     }
 
 
@@ -196,17 +220,16 @@ public unsafe class Program : IDisposable
     /// </summary>
     public string GetDebugLog()
     {
-        if (isDisposed)
+        if (IsDisposed)
             throw ProgramDisposedException.Disposed;
 
-        IntPtr debugLogPtr = GlslangNative.GetProgramInfoLog(program);
-        return Marshal.PtrToStringUTF8(debugLogPtr) ?? string.Empty;
+        return NativeUtil.GetUtf8(GlslangNative.GetProgramInfoLog(program));
     }
 }
 
 
 /// <summary>
-/// Returned if a shader method is called on an already disposed shader.
+/// Thrown if an already disposed <see cref="Program"/> is used.
 /// </summary>
 public class ProgramDisposedException : Exception
 {

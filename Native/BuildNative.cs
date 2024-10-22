@@ -94,8 +94,6 @@ static class Build
         if (cpuSpecific != null)
             zigArgs += $" -Dcpu={cpuSpecific}";
 
-        zigArgs += " -Dregenerate_headers";
-
         var process = new Process
         {
             StartInfo = new ProcessStartInfo
