@@ -2,55 +2,8 @@
 
 namespace Application;
 
-public static class MainProgram
-{        
-    const string fragmentSource = @"
-#include ""./SomeFile.hlsl""
-
-struct VertexInput
+public static class Example
 {
-    float2 Position : POSITION;
-    float4 Color : COLOR0;
-};
-
-struct VertexOutput
-{
-    float4 Position : SV_POSITION;
-    float4 Color : COLOR0;
-};
-
-
-VertexOutput vertex(VertexInput input)
-{
-    VertexOutput output;
-    output.Position = float4(input.Position, 0, 1);
-    output.Color = input.Color;
-    return output;
-}
-
-#define DO_SOMETHING(x) x * 10 + 4 - 8 + sqrt(x) / abs(x)
-
-
-float4 pixel(VertexOutput input) : SV_Target
-{
-    float value = DO_SOMETHING(input.Color.r);
-
-    float value2 = DO_SOMETHING(value);
-
-    float value3 = DO_SOMETHING(value2);
-
-    input.Color *= 10;
-
-    input.Color /= 43.55;
-
-    input.Color.g = value2;
-    input.Color.b = value;
-    input.Color.a = value3;
-    
-    return input.Color;
-}
-";
-
     static IncludeResult IncludeFunction(string headerName, string includerName, uint depth, bool isSystemFile)
     {
         Console.WriteLine($"Including a {(isSystemFile ? "system" : "local")} file, `{headerName}` from `{includerName}` at depth {depth}.");
@@ -58,43 +11,50 @@ float4 pixel(VertexOutput input) : SV_Target
 
         result.headerData = "// Nothing to see here";
         result.headerName = headerName;
-        
+
         return result;
     }
 
     static void Main()
     {
-        using CompilationContext context = new CompilationContext();
-
-        CompilationInput input = new CompilationInput() 
+        CompilationInput input = new CompilationInput()
         {
             language = SourceType.HLSL,
             stage = ShaderStage.Fragment,
             client = ClientType.Vulkan,
-            clientVersion = TargetClientVersion.Vulkan_1_2,
+            clientVersion = TargetClientVersion.Vulkan_1_3,
             targetLanguage = TargetLanguage.SPV,
             targetLanguageVersion = TargetLanguageVersion.SPV_1_5,
-            code = fragmentSource,
+            code = ShaderCode.HlslCode,
             sourceEntrypoint = "pixel",
             defaultVersion = 100,
             defaultProfile = ShaderProfile.None,
             forceDefaultVersionAndProfile = false,
             forwardCompatible = false,
-            fileIncluder = IncludeFunction
+            fileIncluder = IncludeFunction,
+            messages = MessageType.Default,
         };
 
-        Shader shader = context.CreateShader(input);
-        
-        if (!shader.Preprocess())	
+        using Shader shader = new Shader(input);
+
+
+        if (!shader.Preprocess())
         {
             Console.WriteLine("HLSL preprocessing failed");
             Console.WriteLine(shader.GetInfoLog());
             Console.WriteLine(shader.GetDebugLog());
-            Console.WriteLine(fragmentSource);
+            Console.WriteLine(ShaderCode.HlslCode);
             return;
         }
 
-        if (!shader.Parse()) 
+
+        Console.WriteLine("Preprocess info logs:");
+        Console.WriteLine(shader.GetInfoLog());
+
+        Console.WriteLine("Preprocess debug logs:");
+        Console.WriteLine(shader.GetDebugLog());
+
+        if (!shader.Parse())
         {
             Console.WriteLine("HLSL parsing failed");
             Console.WriteLine(shader.GetInfoLog());
@@ -103,11 +63,17 @@ float4 pixel(VertexOutput input) : SV_Target
             return;
         }
 
-        Program program = context.CreateProgram();
+        Console.WriteLine("Parse info logs:");
+        Console.WriteLine(shader.GetInfoLog());
+
+        Console.WriteLine("Parse debug logs:");
+        Console.WriteLine(shader.GetDebugLog());
+
+        using Program program = new Program();
 
         program.AddShader(shader);
 
-        if (!program.Link(MessageType.SPVRules | MessageType.VulkanRules)) 
+        if (!program.Link(MessageType.SPVRules | MessageType.VulkanRules))
         {
             Console.WriteLine("HLSL linking failed");
             Console.WriteLine(program.GetInfoLog());
@@ -115,7 +81,13 @@ float4 pixel(VertexOutput input) : SV_Target
             return;
         }
 
-        program.GenerateSPIRV(out byte[] words, input.stage);
+        Console.WriteLine("Program link info log:");
+        Console.WriteLine(program.GetInfoLog());
+
+        Console.WriteLine("Program link debug log:");
+        Console.WriteLine(program.GetDebugLog());
+
+        program.GenerateSPIRV(out uint[] words, input.stage);
 
         string messages = program.GetSPIRVMessages();
 
@@ -125,6 +97,6 @@ float4 pixel(VertexOutput input) : SV_Target
         Console.WriteLine($"Generated {words.Length} bytes of SPIR-V");
 
         Console.WriteLine($"Dissasembled SPIR-V:");
-        Console.WriteLine(context.DisassembleSPIRV(words));
+        Console.WriteLine(CompilationContext.DisassembleSPIRV(words));
     }
 }
