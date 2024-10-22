@@ -24,11 +24,11 @@ internal unsafe struct NativeInput
     public int forward_compatible;
     public MessageType messages;
     public ResourceLimits* resource;
-    public NativeIncludeCallbacks callbacks;
+    internal NativeIncludeCallbacks callbacks;
     public void* callbacks_ctx;
 
 
-    internal static NativeInput* Allocate(CompilationInput input)
+    public static NativeInput* Allocate(CompilationInput input)
     {
         NativeInput* nativeInput = GlslangNative.Allocate<NativeInput>();
 
@@ -39,7 +39,7 @@ internal unsafe struct NativeInput
         nativeInput->target_language = input.targetLanguage;
         nativeInput->target_language_version = input.targetLanguageVersion;
 
-        nativeInput->code = NativeUtil.AllocUTF8Ptr(input.code, out _, true);
+        nativeInput->code = NativeUtil.AllocUTF8Ptr(input.code ?? "", out _, true);
         nativeInput->entrypoint = NativeUtil.AllocUTF8Ptr(input.entrypoint ?? "main", out _, true);
         nativeInput->source_entrypoint = NativeUtil.AllocUTF8Ptr(input.sourceEntrypoint ?? "main", out _, true);
 
@@ -51,7 +51,9 @@ internal unsafe struct NativeInput
         nativeInput->messages = input.messages ?? MessageType.Default;
 
         // Allocate resource limits
-        nativeInput->resource = GlslangNative.Allocate<ResourceLimits>(input.resourceLimits ?? ResourceLimits.DefaultResource);
+        ResourceLimits resource = ResourceLimits.DefaultResource;
+        nativeInput->resource = GlslangNative.Allocate<ResourceLimits>();
+        resource.Set(nativeInput->resource);
 
         nativeInput->callbacks.include_local = IncludeLocalPtr;
         nativeInput->callbacks.include_system = IncludeSystemPtr;
