@@ -193,4 +193,9 @@ internal static partial class GlslangNative
     [LibraryImport(LibName, EntryPoint = "glslang_SPIRV_disassemble", StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static unsafe partial string DisassembleSPIRV([In] uint[] spvWords, nuint spvWordsLen);
+
+
+    [LibraryImport(LibName, EntryPoint = "glslang_default_resource")]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static unsafe partial ResourceLimits* DefaultResourceLimits();
 }
