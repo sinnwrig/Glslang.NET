@@ -25,12 +25,10 @@ internal static unsafe class NativeUtil
     }
 
     internal static byte[] GetUTF8Bytes(string str, bool nullTerminate = true)
-    {
-        return Encoding.UTF8.GetBytes(Sanitize(str, nullTerminate));
-    }
+        => Encoding.UTF8.GetBytes(Sanitize(str, nullTerminate));
 
-    internal static byte* AllocUTF8Ptr(string str, out uint len, bool nullTerminate = true) =>
-        AllocBytePtr(GetUTF8Bytes(str, nullTerminate), out len);
+    internal static byte* AllocateUTF8Ptr(string str, out uint len, bool nullTerminate = true)
+        => AllocBytePtr(GetUTF8Bytes(str, nullTerminate), out len);
 
     internal static string GetUtf8(byte* utf8Bytes)
         => Marshal.PtrToStringUTF8((nint)utf8Bytes) ?? "";

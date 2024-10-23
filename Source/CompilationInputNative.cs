@@ -30,7 +30,11 @@ internal unsafe struct NativeInput
 
     public static NativeInput* Allocate(CompilationInput input)
     {
+        Console.WriteLine("Allocating input");
+
         NativeInput* nativeInput = GlslangNative.Allocate<NativeInput>();
+
+        Console.WriteLine("Allocated input - setting properties");
 
         nativeInput->language = input.language;
         nativeInput->stage = input.stage;
@@ -38,11 +42,6 @@ internal unsafe struct NativeInput
         nativeInput->client_version = input.clientVersion;
         nativeInput->target_language = input.targetLanguage;
         nativeInput->target_language_version = input.targetLanguageVersion;
-
-        nativeInput->code = NativeUtil.AllocUTF8Ptr(input.code ?? "", out _, true);
-        nativeInput->entrypoint = NativeUtil.AllocUTF8Ptr(input.entrypoint ?? "main", out _, true);
-        nativeInput->source_entrypoint = NativeUtil.AllocUTF8Ptr(input.sourceEntrypoint ?? "main", out _, true);
-
         nativeInput->invert_y = input.invertY;
         nativeInput->default_version = input.defaultVersion;
         nativeInput->default_profile = input.defaultProfile;
@@ -50,15 +49,25 @@ internal unsafe struct NativeInput
         nativeInput->forward_compatible = input.forwardCompatible ? 1 : 0;
         nativeInput->messages = input.messages ?? MessageType.Default;
 
+        Console.WriteLine("Set properties - allocating code strings");
+
+        nativeInput->code = NativeUtil.AllocateUTF8Ptr(input.code ?? "", out _, true);
+        nativeInput->entrypoint = NativeUtil.AllocateUTF8Ptr(input.entrypoint ?? "main", out _, true);
+        nativeInput->source_entrypoint = NativeUtil.AllocateUTF8Ptr(input.sourceEntrypoint ?? "main", out _, true);
+
+        Console.WriteLine("Allocated code strings - allocating resource limits");
+
         // Allocate resource limits
-        ResourceLimits resource = ResourceLimits.DefaultResource;
-        nativeInput->resource = GlslangNative.Allocate<ResourceLimits>();
-        resource.Set(nativeInput->resource);
+        nativeInput->resource = (input.resourceLimits ?? ResourceLimits.DefaultResource).Allocate();
+
+        Console.WriteLine("Allocated resource limits - setting callbacks");
 
         nativeInput->callbacks.include_local = IncludeLocalPtr;
         nativeInput->callbacks.include_system = IncludeSystemPtr;
         nativeInput->callbacks.free_include_result = FreeIncludePtr;
         nativeInput->callbacks_ctx = (void*)(input.fileIncluder != null ? Marshal.GetFunctionPointerForDelegate(input.fileIncluder) : IntPtr.Zero);
+
+        Console.WriteLine("Set callbacks - completed allocation");
 
         return nativeInput;
     }
@@ -101,8 +110,8 @@ internal unsafe struct NativeInput
             isSystemFile);
 
         NativeGLSLIncludeResult* resultPtr = GlslangNative.Allocate<NativeGLSLIncludeResult>();
-        resultPtr->header_name = NativeUtil.AllocUTF8Ptr(result.headerName, out _, true);
-        resultPtr->header_data = NativeUtil.AllocUTF8Ptr(result.headerData, out uint len, false);
+        resultPtr->header_name = NativeUtil.AllocateUTF8Ptr(result.headerName, out _, true);
+        resultPtr->header_data = NativeUtil.AllocateUTF8Ptr(result.headerData, out uint len, false);
         resultPtr->header_length = len;
 
         return resultPtr;

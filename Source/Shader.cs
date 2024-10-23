@@ -172,45 +172,6 @@ public unsafe class Shader : IDisposable
 
 
     /// <summary>
-    /// Set the name of the default uniform block containing the loose uniforms of the shader module.
-    /// </summary>
-    /// <param name="name">The name of the default uniform block.</param>
-    public void SetDefaultUniformBlockName(string name)
-    {
-        if (IsDisposed)
-            throw ShaderDisposedException.Disposed;
-
-        GlslangNative.SetShaderDefaultUniformBlockName(shader, name);
-    }
-
-
-    /// <summary>
-    /// Set the bindings of the resource sets in the shader module.
-    /// </summary>
-    /// <param name="bindings">The resource set bindings.</param>
-    public void SetResourceSetBinding(string[] bindings)
-    {
-        if (IsDisposed)
-            throw ShaderDisposedException.Disposed;
-
-        GlslangNative.SetShaderResourceSetBinding(shader, bindings, (uint)bindings.Length);
-    }
-
-
-    /// <summary>
-    /// Sets or overwrites the preprocessed code string.
-    /// </summary>
-    /// <param name="code">The preprocessed code to set.</param>
-    public void SetPreprocessedCode(string code)
-    {
-        if (IsDisposed)
-            throw ShaderDisposedException.Disposed;
-
-        GlslangNative.SetPreprocessedShaderCode(shader, code);
-    }
-
-
-    /// <summary>
     /// Get preprocessed shader code.
     /// </summary>
     /// <returns>The preprocessed shader with macros expanded.</returns>

@@ -94,7 +94,7 @@ public unsafe class Program : IDisposable
 
         ArgumentNullException.ThrowIfNull(text);
 
-        byte* textPtr = NativeUtil.AllocUTF8Ptr(text, out uint length, false);
+        byte* textPtr = NativeUtil.AllocateUTF8Ptr(text, out uint length, false);
         GlslangNative.AddProgramSourceText(program, stage, textPtr, length);
         GlslangNative.Free(textPtr);
     }
@@ -124,25 +124,6 @@ public unsafe class Program : IDisposable
             throw ProgramDisposedException.Disposed;
 
         return GlslangNative.MapProgramIO(program) == 1;
-    }
-
-
-    /// <summary>
-    /// Map the program's imputs and outputs.
-    /// </summary>
-    /// <returns>True if mapping succeeded.</returns>
-    public bool MapIO(Mapper mapper, Resolver resolver)
-    {
-        if (IsDisposed)
-            throw ProgramDisposedException.Disposed;
-
-        if (mapper.IsDisposed)
-            throw MapperDisposedException.Disposed;
-
-        if (resolver.IsDisposed)
-            throw ResolverDisposedException.Disposed;
-
-        return GlslangNative.MapProgramIOWithResolverAndMapper(program, resolver.resolver, mapper.mapper) == 1;
     }
 
 

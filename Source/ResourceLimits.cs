@@ -369,12 +369,9 @@ public unsafe struct ResourceLimits
     public ShaderLimits limits;
 
 
-    internal readonly void Set(ResourceLimits* limits)
+    internal readonly ResourceLimits* Allocate()
     {
-        if (limits == null)
-        {
-            throw new ArgumentNullException(nameof(limits));
-        }
+        ResourceLimits* limits = GlslangNative.Allocate<ResourceLimits>();
 
         limits->maxLights = maxLights;
         limits->maxClipPlanes = maxClipPlanes;
@@ -488,6 +485,8 @@ public unsafe struct ResourceLimits
         limits->limits.generalSamplerIndexing = this.limits.generalSamplerIndexing;
         limits->limits.generalVariableIndexing = this.limits.generalVariableIndexing;
         limits->limits.generalConstantMatrixVectorIndexing = this.limits.generalConstantMatrixVectorIndexing;
+
+        return limits;
     }
 
 

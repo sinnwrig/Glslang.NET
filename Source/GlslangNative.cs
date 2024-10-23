@@ -85,16 +85,6 @@ internal static partial class GlslangNative
     internal static unsafe partial void SetShaderGLSLVersion(NativeShader* shader, int version);
 
 
-    [LibraryImport(LibName, EntryPoint = "glslang_shader_set_default_uniform_block_name", StringMarshalling = StringMarshalling.Utf8)]
-    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static unsafe partial void SetShaderDefaultUniformBlockName(NativeShader* shader, string name);
-
-
-    [LibraryImport(LibName, EntryPoint = "glslang_shader_set_resource_set_binding", StringMarshalling = StringMarshalling.Utf8)]
-    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static unsafe partial void SetShaderResourceSetBinding(NativeShader* shader, [In] string[] bindings, uint num_bindings);
-
-
     [LibraryImport(LibName, EntryPoint = "glslang_shader_preprocess")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static unsafe partial int PreprocessShader(NativeShader* shader, NativeInput* input);
@@ -108,11 +98,6 @@ internal static partial class GlslangNative
     [LibraryImport(LibName, EntryPoint = "glslang_shader_get_preprocessed_code", StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static unsafe partial byte* GetPreprocessedShaderCode(NativeShader* shader);
-
-
-    [LibraryImport(LibName, EntryPoint = "glslang_shader_set_preprocessed_code", StringMarshalling = StringMarshalling.Utf8)]
-    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static unsafe partial void SetPreprocessedShaderCode(NativeShader* shader, string code);
 
 
     [LibraryImport(LibName, EntryPoint = "glslang_shader_get_info_log", StringMarshalling = StringMarshalling.Utf8)]
@@ -163,11 +148,6 @@ internal static partial class GlslangNative
     internal static unsafe partial int MapProgramIO(NativeProgram* program);
 
 
-    [LibraryImport(LibName, EntryPoint = "glslang_program_map_io_with_resolver_and_mapper")]
-    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static unsafe partial int MapProgramIOWithResolverAndMapper(NativeProgram* program, NativeResolver* resolver, NativeMapper* mapper);
-
-
     [LibraryImport(LibName, EntryPoint = "glslang_program_get_info_log", StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static unsafe partial byte* GetProgramInfoLog(NativeProgram* program);
@@ -213,26 +193,4 @@ internal static partial class GlslangNative
     [LibraryImport(LibName, EntryPoint = "glslang_SPIRV_disassemble", StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static unsafe partial string DisassembleSPIRV([In] uint[] spvWords, nuint spvWordsLen);
-
-
-
-    [LibraryImport(LibName, EntryPoint = "glslang_glsl_mapper_create")]
-    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static unsafe partial NativeMapper* CreateMapper();
-
-
-    [LibraryImport(LibName, EntryPoint = "glslang_glsl_mapper_delete")]
-    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static unsafe partial void DeleteMapper(NativeMapper* mapper);
-
-
-
-    [LibraryImport(LibName, EntryPoint = "glslang_glsl_resolver_create")]
-    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static unsafe partial NativeResolver* CreateResolver(NativeProgram* program, ShaderStage stage);
-
-
-    [LibraryImport(LibName, EntryPoint = "glslang_glsl_resolver_delete")]
-    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static unsafe partial void DeleteResolver(NativeResolver* resolver);
 }
