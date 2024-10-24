@@ -9,24 +9,23 @@ using CommandLine;
 
 static class Build
 {
-    struct PlatformAlias(OSPlatform platform, string commandLineName, string zigAlias, string executableExtension)
+    struct PlatformAlias(OSPlatform platform, string commandLineName, string zigAlias)
     {
         public OSPlatform platform = platform;
         public string commandLineName = commandLineName;
         public string zigAlias = zigAlias;
-        public string executableExtension = executableExtension;
 
         public override readonly bool Equals([NotNullWhen(true)] object obj)
         {
             if (obj is not PlatformAlias alias)
                 return false;
 
-            return alias.platform == platform && alias.zigAlias == zigAlias && alias.executableExtension == executableExtension;
+            return alias.platform == platform && alias.zigAlias == zigAlias;
         }
 
         public override readonly int GetHashCode()
         {
-            return HashCode.Combine(platform, zigAlias, executableExtension);
+            return HashCode.Combine(platform, zigAlias);
         }
     }
 
@@ -52,9 +51,9 @@ static class Build
 
     static List<PlatformAlias> platformAliases = new()
     {
-        new(OSPlatform.Windows, "windows", "windows-gnu", ".exe"),
-        new(OSPlatform.Linux, "linux", "linux-gnu", ""),
-        new(OSPlatform.OSX, "macos", "macos-none", ""),
+        new(OSPlatform.Windows, "windows", "windows-gnu"),
+        new(OSPlatform.Linux, "linux", "linux-gnu"),
+        new(OSPlatform.OSX, "macos", "macos-none"),
     };
 
     static List<ArchAlias> architectureAliases = new()
@@ -86,7 +85,10 @@ static class Build
 
         Console.WriteLine($"Compiling for {architecture.zigAlias}-{platform.zigAlias}. Shared Library: {isShared}. Output directory: {outputPath}");
 
-        string zigArgs = $"build -p \"{outputPath}\" -Dshared -Doptimize=ReleaseFast -Dtarget={architecture.zigAlias}-{platform.zigAlias}";
+        string zigArgs = $"build -p \"{outputPath}\" -Doptimize=Debug -Dminimal_test -Dtarget={architecture.zigAlias}-{platform.zigAlias}";
+
+        if (isShared)
+            zigArgs += " -Dshared";
 
         if (debugSymbols)
             zigArgs += " -Ddebug";
@@ -207,8 +209,6 @@ static class Build
                 }
             }
 
-            bool debugSymbols = options.Debug?.ToLower() == "on";
-
             Console.WriteLine("Compiling for platforms:");
             foreach (var pAlias in platforms)
             {
@@ -227,7 +227,7 @@ static class Build
 
                     string outputPath = Path.Combine(cwd, "lib", $"{pAlias.commandLineName}-{aAlias.commandLineName}");
 
-                    Compile(Path.Combine(cwd, "glslang-zig"), outputPath, aAlias, pAlias, isShared: true);
+                    Compile(Path.Combine(cwd, "glslang-zig"), outputPath, aAlias, pAlias, !options.Static, false, options.Debug);
                 }
             }
         });
@@ -243,6 +243,9 @@ static class Build
         public IEnumerable<string> Architecture { get; set; }
 
         [Option('D', "debug", Required = false, HelpText = "Enable debug symbols.")]
-        public string Debug { get; set; }
+        public bool Debug { get; set; }
+
+        [Option('S', "force-static", Required = false, HelpText = "Force static build.")]
+        public bool Static { get; set; }
     }
 }
