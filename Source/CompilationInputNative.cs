@@ -58,7 +58,7 @@ internal unsafe struct NativeInput
         Console.WriteLine("Allocated code strings - allocating resource limits");
 
         // Allocate resource limits
-        nativeInput->resource = (input.resourceLimits ?? ResourceLimits.DefaultResource).Allocate();
+        nativeInput->resource = ResourceLimits.DefaultResourcePtr;
 
         Console.WriteLine("Allocated resource limits - setting callbacks");
 
@@ -78,8 +78,6 @@ internal unsafe struct NativeInput
         GlslangNative.Free(inputPtr->code);
         GlslangNative.Free(inputPtr->entrypoint);
         GlslangNative.Free(inputPtr->source_entrypoint);
-
-        GlslangNative.Free(inputPtr->resource);
 
         GlslangNative.Free(inputPtr);
     }

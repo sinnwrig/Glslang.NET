@@ -377,7 +377,7 @@ public unsafe struct ResourceLimits
     /// <summary>
     /// Default resource limits.
     /// </summary>
-    public static readonly ResourceLimits DefaultResource = *GlslangNative.DefaultResourceLimits();
+    internal static readonly ResourceLimits* DefaultResourcePtr = GlslangNative.DefaultResourceLimits();
 
 
     /// <summary>
