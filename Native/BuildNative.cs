@@ -85,7 +85,7 @@ static class Build
 
         Console.WriteLine($"Compiling for {architecture.zigAlias}-{platform.zigAlias}. Shared Library: {isShared}. Output directory: {outputPath}");
 
-        string zigArgs = $"build -p \"{outputPath}\" -Doptimize=Debug -Dminimal_test -Dtarget={architecture.zigAlias}-{platform.zigAlias}";
+        string zigArgs = $"build -p \"{outputPath}\" -Doptimize=ReleaseFast -Dminimal_test -Dtarget={architecture.zigAlias}-{platform.zigAlias}";
 
         if (isShared)
             zigArgs += " -Dshared";
