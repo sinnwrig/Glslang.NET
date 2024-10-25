@@ -8,7 +8,8 @@ namespace Glslang.NET;
 /// </summary>
 public static class CompilationContext
 {
-    internal static List<WeakReference<IDisposable>> weakOnReload = [];
+    internal static List<WeakReference<IDisposable>> s_weakOnReload = [];
+    internal static bool s_initialized;
 
 
     static void Main() { }
@@ -16,18 +17,19 @@ public static class CompilationContext
 
     internal static void EnsureInitialized()
     {
-        weakOnReload = [];
+        if (s_initialized)
+            return;
 
         if (GlslangNative.InitializeProcess() != 1)
             throw new FailedInitializationException("Failed to initialize glslang native process.");
 
-        Console.WriteLine("Initialized glslang process");
+        s_initialized = true;
     }
 
 
     internal static void WeakOnReloadCallback(IDisposable disposable)
     {
-        weakOnReload.Add(new WeakReference<IDisposable>(disposable));
+        s_weakOnReload.Add(new WeakReference<IDisposable>(disposable));
     }
 
 
@@ -47,18 +49,21 @@ public static class CompilationContext
     /// </summary>
     public static void ReloadNativeProcess()
     {
-        foreach (WeakReference<IDisposable> weakDisposable in weakOnReload)
+        foreach (WeakReference<IDisposable> weakDisposable in s_weakOnReload)
         {
             if (weakDisposable.TryGetTarget(out IDisposable? disposable))
                 disposable.Dispose();
         }
 
-        weakOnReload.Clear();
+        s_weakOnReload.Clear();
 
-        GlslangNative.FinalizeProcess();
+        if (s_initialized)
+            GlslangNative.FinalizeProcess();
 
         if (GlslangNative.InitializeProcess() != 1)
             throw new FailedInitializationException("Failed to reinitialize glslang native process.");
+
+        s_initialized = true;
     }
 }
 

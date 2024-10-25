@@ -374,10 +374,13 @@ public unsafe struct ResourceLimits
     public ShaderLimits limits;
 
 
+    internal static readonly ResourceLimits* DefaultResourcePtr = GlslangNative.DefaultResourceLimits();
+
+
     /// <summary>
     /// Default resource limits.
     /// </summary>
-    internal static readonly ResourceLimits* DefaultResourcePtr = GlslangNative.DefaultResourceLimits();
+    public static readonly ResourceLimits DefaultResource = *DefaultResourcePtr;
 
 
     /// <summary>

@@ -5,42 +5,27 @@ namespace Glslang.NET;
 
 
 /// <summary>
-/// The shader used to preprocess and parse shader code.
+/// A shader used to preprocess and parse shader code.
 /// </summary>
-/// <remarks>
-/// Ensure this class is only created through `CompilationContext.CreateShader`.
-/// </remarks>
-public unsafe class Shader : IDisposable
+public unsafe class Shader : NativeResource
 {
     /// <summary>
-    /// Input compilation options the shader will use during its lifecycle.
+    /// The input settings provided when creating this shader.
     /// </summary>
-    /// <remarks>
-    /// Once assigned, this setting is tied to a native structure allocation and cannot be changed.
-    /// </remarks>
     public readonly CompilationInput input;
 
+    internal readonly unsafe NativeShader* shader;
 
-    internal readonly NativeShader* shader;
-
-    /// <summary>
-    /// Has this <see cref="Shader"/> been disposed?
-    /// <para>
-    /// Using this instance when this value is true is not allowed and will throw exceptions.
-    /// </para>
-    /// </summary>
-    public bool IsDisposed { get; private set; }
-
-    private readonly NativeInput* nativeInputPtr;
+    private readonly unsafe NativeCompilationInput* nativeInputPtr;
 
 
     /// <summary>
-    /// Creates a new shader instance from the given input options.
+    /// Creates a new <see cref="Shader"/> instance. 
     /// </summary>
-    /// <param name="input"></param>
+    /// <param name="input">The input to use when compiling.</param>
     public Shader(CompilationInput input)
     {
-        nativeInputPtr = NativeInput.Allocate(input);
+        nativeInputPtr = NativeCompilationInput.Allocate(input);
 
         CompilationContext.EnsureInitialized();
 
@@ -52,171 +37,144 @@ public unsafe class Shader : IDisposable
     }
 
 
-    /// <summary>
-    /// Disposes of the current shader instance. Using the shader after calling this is prohibited.
-    /// </summary>
-    public void Dispose()
+    internal override void Cleanup()
     {
-        if (IsDisposed)
-            return;
-
-        IsDisposed = true;
         GlslangNative.DeleteShader(shader);
-        NativeInput.Free(nativeInputPtr);
-        GC.SuppressFinalize(this);
-    }
-
-
-    /// <summary></summary>
-    ~Shader()
-    {
-        Dispose();
+        NativeCompilationInput.Free(nativeInputPtr);
     }
 
 
     /// <summary>
-    /// Set preamble text that comes before any source code and after any pragma directives.
+    /// Get the debug output of the last performed operation.
     /// </summary>
-    /// <param name="preamble">Preamble text to insert.</param>
-    public void SetPreamble(string preamble)
+    public string GetDebugLog()
     {
-        if (IsDisposed)
-            throw ShaderDisposedException.Disposed;
-
-        GlslangNative.SetShaderPreamble(shader, preamble);
+        Validate();
+        return NativeUtil.GetUtf8(GlslangNative.GetShaderInfoLog(shader));
     }
 
 
     /// <summary>
-    /// Shift a resource binding by a given base.
-    /// </summary>
-    /// <param name="resourceType">Resource type to shift.</param>
-    /// <param name="shiftBase">Base to shift by.</param>
-    public void ShiftBinding(ResourceType resourceType, uint shiftBase)
-    {
-        if (IsDisposed)
-            throw ShaderDisposedException.Disposed;
-
-        GlslangNative.ShiftShaderBinding(shader, resourceType, shiftBase);
-    }
-
-
-    /// <summary>
-    /// Shift a set of resource bindings by a given base.
-    /// </summary>
-    /// <param name="resourceType">Resource type to shift.</param>
-    /// <param name="shiftBase">Base to shift by.</param>
-    /// <param name="set">Set to shift.</param>
-    public void ShiftBindingForSet(ResourceType resourceType, uint shiftBase, uint set)
-    {
-        if (IsDisposed)
-            throw ShaderDisposedException.Disposed;
-
-        GlslangNative.ShiftShaderBindingForSet(shader, resourceType, shiftBase, set);
-    }
-
-
-    /// <summary>
-    /// Set shader compilation options.
-    /// </summary>
-    public void SetOptions(ShaderOptions options)
-    {
-        if (IsDisposed)
-            throw ShaderDisposedException.Disposed;
-
-        GlslangNative.SetShaderOptions(shader, options);
-    }
-
-
-    /// <summary>
-    /// Set source file GLSL version.
-    /// </summary>
-    public void SetGLSLVersion(int version)
-    {
-        if (IsDisposed)
-            throw ShaderDisposedException.Disposed;
-
-        GlslangNative.SetShaderGLSLVersion(shader, version);
-    }
-
-
-    private bool isPreprocessed = false;
-
-
-    /// <summary>
-    /// Preprocess the shader.
-    /// </summary>
-    /// <returns>True if preprocessing was successful.</returns>
-    public bool Preprocess()
-    {
-        if (IsDisposed)
-            throw ShaderDisposedException.Disposed;
-
-        int result = GlslangNative.PreprocessShader(shader, nativeInputPtr);
-        isPreprocessed = true;
-        return result == 1; // Success
-    }
-
-
-    /// <summary>
-    /// Parse the shader.
-    /// </summary>
-    /// <returns>True if parsing was successful.</returns>
-    public bool Parse()
-    {
-        if (IsDisposed)
-            throw ShaderDisposedException.Disposed;
-
-        return GlslangNative.ParseShader(shader, nativeInputPtr) == 1; // Success
-    }
-
-
-    /// <summary>
-    /// Get preprocessed shader code.
-    /// </summary>
-    /// <returns>The preprocessed shader with macros expanded.</returns>
-    public string GetPreprocessedCode()
-    {
-        if (IsDisposed)
-            throw ShaderDisposedException.Disposed;
-
-        if (!isPreprocessed)
-        {
-            Preprocess();
-
-            ConsoleColor prev = Console.ForegroundColor;
-
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine("Warning: Shader.GetPreprocessed() called before Shader.Preprocess(), Preprocess() called implicitly." +
-                "This may be a sign of bad control flow. Please ensure Preprocess() is called before GetPreprocessedCode().");
-            Console.ForegroundColor = prev;
-        }
-
-        return NativeUtil.GetUtf8(GlslangNative.GetPreprocessedShaderCode(shader));
-    }
-
-
-    /// <summary>
-    /// Get shader info log.
+    /// Get the debug output of the last performed operation.
     /// </summary>
     public string GetInfoLog()
     {
-        if (IsDisposed)
-            throw ShaderDisposedException.Disposed;
-
+        Validate();
         return NativeUtil.GetUtf8(GlslangNative.GetShaderInfoDebugLog(shader));
     }
 
 
     /// <summary>
-    /// Get shader debug and error logs.
+    /// Get the preprocessed shader string.
     /// </summary>
-    public string GetDebugLog()
+    public string GetPreprocessedCode()
     {
-        if (IsDisposed)
-            throw ShaderDisposedException.Disposed;
+        Validate();
+        return NativeUtil.GetUtf8(GlslangNative.GetPreprocessedShaderCode(shader));
+    }
 
-        return NativeUtil.GetUtf8(GlslangNative.GetShaderInfoLog(shader));
+
+    /// <summary>
+    /// Parse the preprocessed shader string into an AST.
+    /// </summary>
+    public bool Parse()
+    {
+        Validate();
+        return GlslangNative.ParseShader(shader, nativeInputPtr) == 1;
+    }
+
+
+    /// <summary>
+    /// Preprocess the input shader string, expand macros, and resolve include directives.
+    /// </summary>
+    public bool Preprocess()
+    {
+        Validate();
+        return GlslangNative.PreprocessShader(shader, nativeInputPtr) == 1;
+    }
+
+
+    /// <summary>
+    /// Set the default global uniform block's name.
+    /// </summary>
+    public void SetDefaultUniformBlockName(string name)
+    {
+        Validate();
+        GlslangNative.SetDefaultUniformBlockName(shader, name);
+    }
+
+
+    /// <summary>
+    /// Set the default global uniform block's set and binding.
+    /// </summary>
+    public void SetDefaultUniformBlockSetAndBinding(uint set, uint binding)
+    {
+        Validate();
+        GlslangNative.SetDefaultUniformBlockSetAndBinding(shader, set, binding);
+    }
+
+
+    /// <summary>
+    /// Set the active GLSL version to reference when preprocessing and parsing.
+    /// </summary>
+    public void SetGLSLVersion(int version)
+    {
+        Validate();
+        GlslangNative.SetShaderGLSLVersion(shader, version);
+    }
+
+
+    /// <summary>
+    /// Set the shader options.
+    /// </summary>
+    public void SetOptions(ShaderOptions options)
+    {
+        Validate();
+        GlslangNative.SetShaderOptions(shader, options);
+    }
+
+
+    /// <summary>
+    /// Set the preamble text that is processed before any other part of the source code string.
+    /// </summary>
+    public void SetPreamble(string preamble)
+    {
+        Validate();
+        Utf8String utf8String = new Utf8String(preamble, true);
+
+        AddSubresource("_preamble", utf8String);
+
+        GlslangNative.SetShaderPreamble(shader, utf8String.Bytes);
+    }
+
+
+    /// <summary>
+    /// Set the preprocessed shader code, skipping the need to call <see cref="Preprocess"/> 
+    /// </summary>
+    public void SetPreprocessedShaderCode(string code)
+    {
+        Validate();
+        GlslangNative.SetPreprocessedShaderCode(shader, code);
+    }
+
+
+    /// <summary>
+    /// Shift the binding of the given resource type by a base.
+    /// </summary>
+    public void ShiftBinding(ResourceType resourceType, uint shiftBase)
+    {
+        Validate();
+        GlslangNative.ShiftShaderBinding(shader, resourceType, shiftBase);
+    }
+
+
+    /// <summary>
+    /// Shift the set binding of a given resource type by a base.
+    /// </summary>
+    public void ShiftBindingForSet(ResourceType resourceType, uint shiftBase, uint set)
+    {
+        Validate();
+        GlslangNative.ShiftShaderBindingForSet(shader, resourceType, shiftBase, set);
     }
 }
 

@@ -7,206 +7,162 @@ namespace Glslang.NET;
 /// <summary>
 /// The shader program used to link and generate shader code.
 /// </summary>
-public unsafe class Program : IDisposable
+public unsafe class Program : NativeResource
 {
-    internal readonly NativeProgram* program;
+    internal readonly unsafe NativeProgram* program;
 
-    /// <summary>
-    /// Has this <see cref="Program"/> been disposed?
-    /// <para>
-    /// Using this instance when this value is true is not allowed and will throw exceptions.
-    /// </para>
-    /// </summary>
-    public bool IsDisposed { get; private set; }
+    private bool generatedSPIRV;
 
 
     /// <summary>
-    /// Create a new program instance.
+    /// Creates a new <see cref="Program"/> instance. 
     /// </summary>
     public Program()
     {
         CompilationContext.EnsureInitialized();
-
         program = GlslangNative.CreateProgram();
-
         CompilationContext.WeakOnReloadCallback(this);
     }
 
 
     /// <summary>
-    /// Disposes of the current program instance. Using the program after calling this is prohibited.
+    /// Adds a shader to the current compilation unit.
     /// </summary>
-    public void Dispose()
-    {
-        if (IsDisposed)
-            return;
-
-        IsDisposed = true;
-        GlslangNative.DeleteProgram(program);
-        GC.SuppressFinalize(this);
-    }
-
-
-    /// <summary></summary>
-    ~Program()
-    {
-        Dispose();
-    }
-
-
-    /// <summary>
-    /// Add a shader to the program. 
-    /// </summary>
-    /// <param name="shader">The shader to add.</param>
     public void AddShader(Shader shader)
     {
-        if (IsDisposed)
-            throw ProgramDisposedException.Disposed;
-
-        if (shader.IsDisposed)
-            throw ShaderDisposedException.Disposed;
-
+        Validate();
+        shader.Validate();
         GlslangNative.AddShaderToProgram(program, shader.shader);
     }
 
 
     /// <summary>
-    /// Link added shaders together.
-    /// </summary>
-    /// <param name="messages">Output message types.</param>
-    /// <returns>True if linking succeeded.</returns>
-    public bool Link(MessageType messages)
-    {
-        if (IsDisposed)
-            throw ProgramDisposedException.Disposed;
-
-        return GlslangNative.LinkProgram(program, messages) == 1;
-    }
-
-
-    /// <summary>
-    /// Add source text to intermediate.
+    /// Adds reference source text for a given shader stage.
     /// </summary>
     public void AddSourceText(ShaderStage stage, string text)
     {
-        if (IsDisposed)
-            throw ProgramDisposedException.Disposed;
-
+        Validate();
         ArgumentNullException.ThrowIfNull(text);
 
-        byte* textPtr = NativeUtil.AllocateUTF8Ptr(text, out uint length, false);
-        GlslangNative.AddProgramSourceText(program, stage, textPtr, length);
-        GlslangNative.Free(textPtr);
+        Utf8String utf8String = new(text, false);
+        GlslangNative.AddProgramSourceText(program, stage, utf8String.Bytes, (nuint)utf8String.Length);
+        utf8String.Dispose();
+    }
+
+
+    internal override void Cleanup()
+    {
+        GlslangNative.DeleteProgram(program);
     }
 
 
     /// <summary>
-    /// Add source file name to intermediate.
+    /// Generates and outputs the SPIR-V bytecode for a given shader stage.
     /// </summary>
-    public void SetSourceFile(ShaderStage stage, string file)
+    public unsafe bool GenerateSPIRV(out uint[] SPIRVWords, ShaderStage stage, SPIRVOptions? options = null)
     {
-        if (IsDisposed)
-            throw ProgramDisposedException.Disposed;
+        Validate();
 
-        ArgumentNullException.ThrowIfNull(file);
-
-        GlslangNative.SetProgramSourceFile(program, stage, file);
-    }
-
-
-    /// <summary>
-    /// Map the program's imputs and outputs.
-    /// </summary>
-    /// <returns>True if mapping succeeded.</returns>
-    public bool MapIO()
-    {
-        if (IsDisposed)
-            throw ProgramDisposedException.Disposed;
-
-        return GlslangNative.MapProgramIO(program) == 1;
-    }
-
-
-    // SPIR-V generation
-
-    private bool generatedSPIRV = false;
-
-    /// <summary>
-    /// Outputs a byte buffer of generated SPIR-V words.
-    /// </summary>
-    /// <param name="SPIRVWords">The output buffer of SPIR-V words</param>
-    /// <param name="stage">The shader stage to output.</param>
-    /// <param name="options">The generation options to use.</param>
-    /// <returns>True if generation succeeded.</returns>
-    public bool GenerateSPIRV(out uint[] SPIRVWords, ShaderStage stage, SPIRVOptions? options = null)
-    {
-        if (IsDisposed)
-            throw ProgramDisposedException.Disposed;
-
-        if (options != null)
+        if (options == null)
         {
-            SPIRVOptions* optionsPtr = GlslangNative.Allocate(options.Value);
-            GlslangNative.GenerateProgramSPIRVWithOptions(program, stage, optionsPtr);
-            GlslangNative.Free(optionsPtr);
             GlslangNative.GenerateProgramSPIRV(program, stage);
         }
         else
         {
-            GlslangNative.GenerateProgramSPIRV(program, stage);
+            SPIRVOptions* optionsPtr = GlslangNative.Allocate(options.Value);
+            GlslangNative.GenerateProgramSPIRVWithOptions(program, stage, optionsPtr);
+            GlslangNative.Free(optionsPtr);
         }
 
-        nuint size = GlslangNative.GetProgramSPIRVSize(program);
-        SPIRVWords = new uint[(int)size];
+        UIntPtr programSPIRVSize = GlslangNative.GetProgramSPIRVSize(program);
+
+        SPIRVWords = new uint[(int)programSPIRVSize];
+
         GlslangNative.GetProgramSPIRVBuffer(program, SPIRVWords);
 
         generatedSPIRV = true;
 
-        return size != 0;
+        return programSPIRVSize != 0;
     }
 
 
     /// <summary>
-    /// Gets SPIR-V generation messages.
+    /// Get the debug output of the last performed operation.
     /// </summary>
-    /// <exception cref="InvalidOperationException"></exception>
+    public string GetDebugLog()
+    {
+        Validate();
+        return NativeUtil.GetUtf8(GlslangNative.GetProgramInfoLog(program));
+    }
+
+
+    /// <summary>
+    /// Get the info output of the last performed operation.
+    /// </summary>
+    public string GetInfoLog()
+    {
+        Validate();
+        return NativeUtil.GetUtf8(GlslangNative.GetProgramInfoDebugLog(program));
+    }
+
+
+    /// <summary>
+    /// Get the SPIR-V message output of the last performed SPIR-V generation operation.
+    /// </summary>
     public string GetSPIRVMessages()
     {
-        if (IsDisposed)
-            throw ProgramDisposedException.Disposed;
+        Validate();
 
         if (!generatedSPIRV)
-        {
-            throw new InvalidOperationException(
-                "ShaderProgram.GetSPIRVMessages() called before Shader.GenerateSPIRV()." +
-                "This is not allowed. Please ensure GenerateSPIRV() is called before GetSpirvMessages()."
-            );
-        }
+            throw new InvalidOperationException("ShaderProgram.GetSPIRVMessages() called before Shader.GenerateSPIRV().This is not allowed. Please ensure GenerateSPIRV() is called before GetSpirvMessages().");
 
         return NativeUtil.GetUtf8(GlslangNative.GetProgramSPIRVMessages(program));
     }
 
 
     /// <summary>
-    /// Gets program info log.
+    /// Links and validates the added shaders. 
     /// </summary>
-    public string GetInfoLog()
+    public bool Link(MessageType messages)
     {
-        if (IsDisposed)
-            throw ProgramDisposedException.Disposed;
-
-        return NativeUtil.GetUtf8(GlslangNative.GetProgramInfoDebugLog(program));
+        Validate();
+        return GlslangNative.LinkProgram(program, messages) == 1;
     }
 
 
     /// <summary>
-    /// Gets program debug and error logs.
+    /// Maps the program's inputs and outputs.
     /// </summary>
-    public string GetDebugLog()
+    public bool MapIO()
     {
-        if (IsDisposed)
-            throw ProgramDisposedException.Disposed;
+        Validate();
+        return GlslangNative.MapProgramIO(program) == 1;
+    }
 
-        return NativeUtil.GetUtf8(GlslangNative.GetProgramInfoLog(program));
+
+    /// <summary>
+    /// Maps the program's inputs and outputs using a given mapper and resolver pair.
+    /// </summary>
+    public bool MapIO(Mapper mapper, Resolver resolver)
+    {
+        Validate();
+        mapper.Validate();
+        resolver.Validate();
+
+        return GlslangNative.MapProgramIOWithResolverAndMapper(program, resolver.resolver, mapper.mapper) == 1;
+    }
+
+
+    /// <summary>
+    /// Sets a reference source file name for a given shader stage.
+    /// </summary>
+    public void SetSourceFile(ShaderStage stage, string file)
+    {
+        Validate();
+
+        ArgumentNullException.ThrowIfNull(file);
+
+        GlslangNative.SetProgramSourceFile(program, stage, file);
     }
 }
 
