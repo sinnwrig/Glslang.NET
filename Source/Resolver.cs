@@ -1,27 +1,34 @@
 using System;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace Glslang.NET;
 
 
-/// <summary></summary>
-public unsafe class Resolver : NativeResource
+/// <summary/>
+public unsafe class Resolver : SafeHandle
 {
-    internal readonly unsafe NativeResolver* resolver;
+    internal unsafe NativeResolver* ResolverPtr => (NativeResolver*)handle;
 
 
-    /// <summary></summary>
-    public Resolver(Program program, ShaderStage stage)
+    /// <summary/>
+    public Resolver(Program program, ShaderStage stage) : base(-1, true)
     {
-        program.Validate();
+        ArgumentNullException.ThrowIfNull(program);
+
         CompilationContext.EnsureInitialized();
-        this.resolver = GlslangNative.CreateGLSLResolver(program.program, stage);
-        CompilationContext.WeakOnReloadCallback(this);
+        handle = (nint)GlslangNative.CreateGLSLResolver(program.ProgramPtr, stage);
     }
 
+    /// <inheritdoc/>
+    public override bool IsInvalid => handle < 1;
 
-    internal override void Cleanup()
+    /// <inheritdoc/>
+    protected override bool ReleaseHandle()
     {
-        GlslangNative.DeleteGLSLResolver(this.resolver);
+        GlslangNative.DeleteGLSLResolver(ResolverPtr);
+        handle = -1;
+
+        return true;
     }
 }

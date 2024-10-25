@@ -3,7 +3,6 @@
     <PropertyGroup>
         <TargetFrameworks>net8.0</TargetFrameworks>
         <OutputType>Library</OutputType>
-        <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
@@ -11,7 +10,7 @@
 
     <PropertyGroup>
         <PackageId>Glslang.NET</PackageId>
-        <Version>1.0.1</Version>
+        <Version>1.1.2</Version>
         
         <Authors>Kai Angulo</Authors>
         <Owners>Kai Angulo</Owners>

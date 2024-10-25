@@ -1,4 +1,6 @@
 using System;
+using System.Linq;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 namespace Glslang.NET;
@@ -7,21 +9,25 @@ namespace Glslang.NET;
 /// <summary>
 /// The shader program used to link and generate shader code.
 /// </summary>
-public unsafe class Program : NativeResource
+public unsafe class Program : SafeHandle
 {
-    internal readonly unsafe NativeProgram* program;
+    internal unsafe NativeProgram* ProgramPtr => (NativeProgram*)handle;
 
-    private bool generatedSPIRV;
+    private List<Shader> _trackedShaders;
+    private bool _generatedSPIRV;
+
+    /// <inheritdoc/>
+    public override bool IsInvalid => handle < 1;
 
 
     /// <summary>
     /// Creates a new <see cref="Program"/> instance. 
     /// </summary>
-    public Program()
+    public Program() : base(-1, true)
     {
         CompilationContext.EnsureInitialized();
-        program = GlslangNative.CreateProgram();
-        CompilationContext.WeakOnReloadCallback(this);
+        handle = (nint)GlslangNative.CreateProgram();
+        _trackedShaders = [];
     }
 
 
@@ -30,9 +36,8 @@ public unsafe class Program : NativeResource
     /// </summary>
     public void AddShader(Shader shader)
     {
-        Validate();
-        shader.Validate();
-        GlslangNative.AddShaderToProgram(program, shader.shader);
+        _trackedShaders.Add(shader);
+        GlslangNative.AddShaderToProgram(ProgramPtr, shader.ShaderPtr);
     }
 
 
@@ -41,18 +46,22 @@ public unsafe class Program : NativeResource
     /// </summary>
     public void AddSourceText(ShaderStage stage, string text)
     {
-        Validate();
         ArgumentNullException.ThrowIfNull(text);
 
-        Utf8String utf8String = new(text, false);
-        GlslangNative.AddProgramSourceText(program, stage, utf8String.Bytes, (nuint)utf8String.Length);
-        utf8String.Dispose();
+        byte* utf8String = NativeUtil.AllocateUTF8Ptr(text, out uint len, false);
+        GlslangNative.AddProgramSourceText(ProgramPtr, stage, utf8String, len);
+        GlslangNative.Free(utf8String);
     }
 
 
-    internal override void Cleanup()
+    /// <inheritdoc/>
+    protected override bool ReleaseHandle()
     {
-        GlslangNative.DeleteProgram(program);
+        _trackedShaders.Clear();
+        GlslangNative.DeleteProgram(ProgramPtr);
+        handle = -1;
+
+        return true;
     }
 
 
@@ -61,26 +70,24 @@ public unsafe class Program : NativeResource
     /// </summary>
     public unsafe bool GenerateSPIRV(out uint[] SPIRVWords, ShaderStage stage, SPIRVOptions? options = null)
     {
-        Validate();
-
         if (options == null)
         {
-            GlslangNative.GenerateProgramSPIRV(program, stage);
+            GlslangNative.GenerateProgramSPIRV(ProgramPtr, stage);
         }
         else
         {
             SPIRVOptions* optionsPtr = GlslangNative.Allocate(options.Value);
-            GlslangNative.GenerateProgramSPIRVWithOptions(program, stage, optionsPtr);
+            GlslangNative.GenerateProgramSPIRVWithOptions(ProgramPtr, stage, optionsPtr);
             GlslangNative.Free(optionsPtr);
         }
 
-        UIntPtr programSPIRVSize = GlslangNative.GetProgramSPIRVSize(program);
+        UIntPtr programSPIRVSize = GlslangNative.GetProgramSPIRVSize(ProgramPtr);
 
         SPIRVWords = new uint[(int)programSPIRVSize];
 
-        GlslangNative.GetProgramSPIRVBuffer(program, SPIRVWords);
+        GlslangNative.GetProgramSPIRVBuffer(ProgramPtr, SPIRVWords);
 
-        generatedSPIRV = true;
+        _generatedSPIRV = true;
 
         return programSPIRVSize != 0;
     }
@@ -91,8 +98,7 @@ public unsafe class Program : NativeResource
     /// </summary>
     public string GetDebugLog()
     {
-        Validate();
-        return NativeUtil.GetUtf8(GlslangNative.GetProgramInfoLog(program));
+        return NativeUtil.GetUtf8(GlslangNative.GetProgramInfoLog(ProgramPtr));
     }
 
 
@@ -101,8 +107,7 @@ public unsafe class Program : NativeResource
     /// </summary>
     public string GetInfoLog()
     {
-        Validate();
-        return NativeUtil.GetUtf8(GlslangNative.GetProgramInfoDebugLog(program));
+        return NativeUtil.GetUtf8(GlslangNative.GetProgramInfoDebugLog(ProgramPtr));
     }
 
 
@@ -111,12 +116,10 @@ public unsafe class Program : NativeResource
     /// </summary>
     public string GetSPIRVMessages()
     {
-        Validate();
-
-        if (!generatedSPIRV)
+        if (!_generatedSPIRV)
             throw new InvalidOperationException("ShaderProgram.GetSPIRVMessages() called before Shader.GenerateSPIRV().This is not allowed. Please ensure GenerateSPIRV() is called before GetSpirvMessages().");
 
-        return NativeUtil.GetUtf8(GlslangNative.GetProgramSPIRVMessages(program));
+        return NativeUtil.GetUtf8(GlslangNative.GetProgramSPIRVMessages(ProgramPtr));
     }
 
 
@@ -125,8 +128,10 @@ public unsafe class Program : NativeResource
     /// </summary>
     public bool Link(MessageType messages)
     {
-        Validate();
-        return GlslangNative.LinkProgram(program, messages) == 1;
+        if (_trackedShaders.Any(x => x.IsInvalid))
+            throw new ShaderDisposedException("Attempted to link with disposed shader");
+
+        return GlslangNative.LinkProgram(ProgramPtr, messages) == 1;
     }
 
 
@@ -135,8 +140,7 @@ public unsafe class Program : NativeResource
     /// </summary>
     public bool MapIO()
     {
-        Validate();
-        return GlslangNative.MapProgramIO(program) == 1;
+        return GlslangNative.MapProgramIO(ProgramPtr) == 1;
     }
 
 
@@ -145,11 +149,10 @@ public unsafe class Program : NativeResource
     /// </summary>
     public bool MapIO(Mapper mapper, Resolver resolver)
     {
-        Validate();
-        mapper.Validate();
-        resolver.Validate();
+        ArgumentNullException.ThrowIfNull(mapper);
+        ArgumentNullException.ThrowIfNull(resolver);
 
-        return GlslangNative.MapProgramIOWithResolverAndMapper(program, resolver.resolver, mapper.mapper) == 1;
+        return GlslangNative.MapProgramIOWithResolverAndMapper(ProgramPtr, resolver.ResolverPtr, mapper.MapperPtr) == 1;
     }
 
 
@@ -158,21 +161,8 @@ public unsafe class Program : NativeResource
     /// </summary>
     public void SetSourceFile(ShaderStage stage, string file)
     {
-        Validate();
-
         ArgumentNullException.ThrowIfNull(file);
 
-        GlslangNative.SetProgramSourceFile(program, stage, file);
+        GlslangNative.SetProgramSourceFile(ProgramPtr, stage, file);
     }
-}
-
-
-/// <summary>
-/// Thrown if an already disposed <see cref="Program"/> is used.
-/// </summary>
-public class ProgramDisposedException : Exception
-{
-    internal static ProgramDisposedException Disposed = new ProgramDisposedException("Program is disposed");
-
-    internal ProgramDisposedException(string message) : base(message) { }
 }

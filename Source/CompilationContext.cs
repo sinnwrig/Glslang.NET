@@ -1,4 +1,4 @@
-using System.Runtime.InteropServices;
+using System;
 
 namespace Glslang.NET;
 
@@ -8,7 +8,6 @@ namespace Glslang.NET;
 /// </summary>
 public static class CompilationContext
 {
-    internal static List<WeakReference<IDisposable>> s_weakOnReload = [];
     internal static bool s_initialized;
 
 
@@ -26,13 +25,6 @@ public static class CompilationContext
         s_initialized = true;
     }
 
-
-    internal static void WeakOnReloadCallback(IDisposable disposable)
-    {
-        s_weakOnReload.Add(new WeakReference<IDisposable>(disposable));
-    }
-
-
     /// <summary>
     /// Disassemble SPIR-V binary into human-readabe format.
     /// </summary>
@@ -41,29 +33,6 @@ public static class CompilationContext
     public static string DisassembleSPIRV(uint[] spirvWords)
     {
         return GlslangNative.DisassembleSPIRV(spirvWords, (uint)spirvWords.Length);
-    }
-
-
-    /// <summary>
-    /// Dispose of allocated shader resources and programs, and finalize the native process before reinitializing it.
-    /// </summary>
-    public static void ReloadNativeProcess()
-    {
-        foreach (WeakReference<IDisposable> weakDisposable in s_weakOnReload)
-        {
-            if (weakDisposable.TryGetTarget(out IDisposable? disposable))
-                disposable.Dispose();
-        }
-
-        s_weakOnReload.Clear();
-
-        if (s_initialized)
-            GlslangNative.FinalizeProcess();
-
-        if (GlslangNative.InitializeProcess() != 1)
-            throw new FailedInitializationException("Failed to reinitialize glslang native process.");
-
-        s_initialized = true;
     }
 }
 

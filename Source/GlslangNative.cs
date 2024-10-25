@@ -1,3 +1,4 @@
+using System;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
 
@@ -145,7 +146,7 @@ internal static partial class GlslangNative
 
     [LibraryImport(LibName, EntryPoint = "glslang_program_add_source_text")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal unsafe static partial void AddProgramSourceText(NativeProgram* program, ShaderStage stage, byte* text, UIntPtr len);
+    internal unsafe static partial void AddProgramSourceText(NativeProgram* program, ShaderStage stage, byte* text, nuint len);
 
     [LibraryImport(LibName, EntryPoint = "glslang_program_add_shader")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
@@ -189,7 +190,7 @@ internal static partial class GlslangNative
 
     [LibraryImport(LibName, EntryPoint = "glslang_program_SPIRV_get_size")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal unsafe static partial UIntPtr GetProgramSPIRVSize(NativeProgram* program);
+    internal unsafe static partial nuint GetProgramSPIRVSize(NativeProgram* program);
 
     [LibraryImport(LibName, EntryPoint = "glslang_program_link")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]

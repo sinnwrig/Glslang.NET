@@ -1,4 +1,4 @@
-using System.ComponentModel;
+using System;
 using System.Runtime.InteropServices;
 
 namespace Glslang.NET;
@@ -7,23 +7,28 @@ namespace Glslang.NET;
 /// <summary>
 /// A shader used to preprocess and parse shader code.
 /// </summary>
-public unsafe class Shader : NativeResource
+public unsafe class Shader : SafeHandle
 {
     /// <summary>
     /// The input settings provided when creating this shader.
     /// </summary>
     public readonly CompilationInput input;
 
-    internal readonly unsafe NativeShader* shader;
+    internal unsafe NativeShader* ShaderPtr => (NativeShader*)handle;
+
+    /// <inheritdoc/>
+    public override bool IsInvalid => handle < 1;
 
     private readonly unsafe NativeCompilationInput* nativeInputPtr;
+
+    private Utf8String? _preamble = null;
 
 
     /// <summary>
     /// Creates a new <see cref="Shader"/> instance. 
     /// </summary>
     /// <param name="input">The input to use when compiling.</param>
-    public Shader(CompilationInput input)
+    public Shader(CompilationInput input) : base(-1, true)
     {
         nativeInputPtr = NativeCompilationInput.Allocate(input);
 
@@ -31,16 +36,18 @@ public unsafe class Shader : NativeResource
 
         this.input = input;
 
-        shader = GlslangNative.CreateShader(nativeInputPtr);
-
-        CompilationContext.WeakOnReloadCallback(this);
+        handle = (nint)GlslangNative.CreateShader(nativeInputPtr);
     }
 
 
-    internal override void Cleanup()
+    /// <inheritdoc/>
+    protected override bool ReleaseHandle()
     {
-        GlslangNative.DeleteShader(shader);
+        GlslangNative.DeleteShader(ShaderPtr);
         NativeCompilationInput.Free(nativeInputPtr);
+
+        handle = -1;
+        return true;
     }
 
 
@@ -49,8 +56,7 @@ public unsafe class Shader : NativeResource
     /// </summary>
     public string GetDebugLog()
     {
-        Validate();
-        return NativeUtil.GetUtf8(GlslangNative.GetShaderInfoLog(shader));
+        return NativeUtil.GetUtf8(GlslangNative.GetShaderInfoLog(ShaderPtr));
     }
 
 
@@ -59,8 +65,7 @@ public unsafe class Shader : NativeResource
     /// </summary>
     public string GetInfoLog()
     {
-        Validate();
-        return NativeUtil.GetUtf8(GlslangNative.GetShaderInfoDebugLog(shader));
+        return NativeUtil.GetUtf8(GlslangNative.GetShaderInfoDebugLog(ShaderPtr));
     }
 
 
@@ -69,8 +74,7 @@ public unsafe class Shader : NativeResource
     /// </summary>
     public string GetPreprocessedCode()
     {
-        Validate();
-        return NativeUtil.GetUtf8(GlslangNative.GetPreprocessedShaderCode(shader));
+        return NativeUtil.GetUtf8(GlslangNative.GetPreprocessedShaderCode(ShaderPtr));
     }
 
 
@@ -79,18 +83,16 @@ public unsafe class Shader : NativeResource
     /// </summary>
     public bool Parse()
     {
-        Validate();
-        return GlslangNative.ParseShader(shader, nativeInputPtr) == 1;
+        return GlslangNative.ParseShader(ShaderPtr, nativeInputPtr) == 1;
     }
 
 
     /// <summary>
-    /// Preprocess the input shader string, expand macros, and resolve include directives.
+    /// Preprocess the input ShaderPtr string, expand macros, and resolve include directives.
     /// </summary>
     public bool Preprocess()
     {
-        Validate();
-        return GlslangNative.PreprocessShader(shader, nativeInputPtr) == 1;
+        return GlslangNative.PreprocessShader(ShaderPtr, nativeInputPtr) == 1;
     }
 
 
@@ -99,8 +101,7 @@ public unsafe class Shader : NativeResource
     /// </summary>
     public void SetDefaultUniformBlockName(string name)
     {
-        Validate();
-        GlslangNative.SetDefaultUniformBlockName(shader, name);
+        GlslangNative.SetDefaultUniformBlockName(ShaderPtr, name);
     }
 
 
@@ -109,8 +110,7 @@ public unsafe class Shader : NativeResource
     /// </summary>
     public void SetDefaultUniformBlockSetAndBinding(uint set, uint binding)
     {
-        Validate();
-        GlslangNative.SetDefaultUniformBlockSetAndBinding(shader, set, binding);
+        GlslangNative.SetDefaultUniformBlockSetAndBinding(ShaderPtr, set, binding);
     }
 
 
@@ -119,8 +119,7 @@ public unsafe class Shader : NativeResource
     /// </summary>
     public void SetGLSLVersion(int version)
     {
-        Validate();
-        GlslangNative.SetShaderGLSLVersion(shader, version);
+        GlslangNative.SetShaderGLSLVersion(ShaderPtr, version);
     }
 
 
@@ -129,8 +128,7 @@ public unsafe class Shader : NativeResource
     /// </summary>
     public void SetOptions(ShaderOptions options)
     {
-        Validate();
-        GlslangNative.SetShaderOptions(shader, options);
+        GlslangNative.SetShaderOptions(ShaderPtr, options);
     }
 
 
@@ -139,12 +137,8 @@ public unsafe class Shader : NativeResource
     /// </summary>
     public void SetPreamble(string preamble)
     {
-        Validate();
-        Utf8String utf8String = new Utf8String(preamble, true);
-
-        AddSubresource("_preamble", utf8String);
-
-        GlslangNative.SetShaderPreamble(shader, utf8String.Bytes);
+        _preamble = new Utf8String(preamble, true);
+        GlslangNative.SetShaderPreamble(ShaderPtr, _preamble.Bytes);
     }
 
 
@@ -153,8 +147,7 @@ public unsafe class Shader : NativeResource
     /// </summary>
     public void SetPreprocessedShaderCode(string code)
     {
-        Validate();
-        GlslangNative.SetPreprocessedShaderCode(shader, code);
+        GlslangNative.SetPreprocessedShaderCode(ShaderPtr, code);
     }
 
 
@@ -163,8 +156,7 @@ public unsafe class Shader : NativeResource
     /// </summary>
     public void ShiftBinding(ResourceType resourceType, uint shiftBase)
     {
-        Validate();
-        GlslangNative.ShiftShaderBinding(shader, resourceType, shiftBase);
+        GlslangNative.ShiftShaderBinding(ShaderPtr, resourceType, shiftBase);
     }
 
 
@@ -173,8 +165,7 @@ public unsafe class Shader : NativeResource
     /// </summary>
     public void ShiftBindingForSet(ResourceType resourceType, uint shiftBase, uint set)
     {
-        Validate();
-        GlslangNative.ShiftShaderBindingForSet(shader, resourceType, shiftBase, set);
+        GlslangNative.ShiftShaderBindingForSet(ShaderPtr, resourceType, shiftBase, set);
     }
 }
 

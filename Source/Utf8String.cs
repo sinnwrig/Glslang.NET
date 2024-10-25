@@ -6,22 +6,29 @@ using System.Text;
 namespace Glslang.NET;
 
 
-internal unsafe class Utf8String : NativeResource
+internal unsafe class Utf8String : SafeHandle
 {
-    public readonly unsafe byte* Bytes;
+    public unsafe byte* Bytes => (byte*)handle;
 
     public readonly int Length;
 
+    /// <inheritdoc/>
+    public override bool IsInvalid => handle < 1;
 
-    public unsafe Utf8String(string source, bool nullTerminate)
+
+    public unsafe Utf8String(string source, bool nullTerminate) : base(-1, true)
     {
-        Bytes = NativeUtil.AllocateUTF8Ptr(source, out uint len, nullTerminate);
+        handle = (nint)NativeUtil.AllocateUTF8Ptr(source, out uint len, nullTerminate);
         Length = (int)len;
     }
 
 
-    internal override void Cleanup()
+    /// <inheritdoc/>
+    protected override bool ReleaseHandle()
     {
         Marshal.FreeHGlobal((nint)Bytes);
+        handle = -1;
+
+        return true;
     }
 }
