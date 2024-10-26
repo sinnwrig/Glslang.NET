@@ -17,13 +17,13 @@ internal static partial class GlslangNative
 
     public static unsafe T* Allocate<T>() where T : unmanaged
     {
-        return (T*)Marshal.AllocHGlobal(sizeof(T));
+        return (T*)NativeMemory.Alloc((nuint)sizeof(T));
     }
 
 
     public static unsafe T* Allocate<T>(T defaultValue) where T : unmanaged
     {
-        T* tPointer = (T*)Marshal.AllocHGlobal(sizeof(T));
+        T* tPointer = (T*)NativeMemory.Alloc((nuint)sizeof(T));
 
         GCHandle gCHandle = GCHandle.Alloc(defaultValue, GCHandleType.Pinned);
         Buffer.MemoryCopy((void*)gCHandle.AddrOfPinnedObject(), tPointer, sizeof(T), sizeof(T));
@@ -38,7 +38,7 @@ internal static partial class GlslangNative
         if (ptr == null)
             throw new Exception("Tried to deallocate a null pointer");
 
-        Marshal.FreeHGlobal((nint)ptr);
+        NativeMemory.Free(ptr);
     }
 
 

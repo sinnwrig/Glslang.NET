@@ -26,7 +26,7 @@ internal unsafe class Utf8String : SafeHandle
     /// <inheritdoc/>
     protected override bool ReleaseHandle()
     {
-        Marshal.FreeHGlobal((nint)Bytes);
+        NativeMemory.Free(Bytes);
         handle = -1;
 
         return true;

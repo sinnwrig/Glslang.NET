@@ -12,7 +12,7 @@ internal static unsafe class NativeUtil
             str += '\0';
 
         len = (uint)Encoding.UTF8.GetByteCount(str);
-        byte* bytePtr = (byte*)Marshal.AllocHGlobal((int)len);
+        byte* bytePtr = (byte*)NativeMemory.Alloc(len);
 
         fixed (char* strPtr = str)
             Encoding.UTF8.GetBytes(strPtr, str.Length, bytePtr, (int)len);
