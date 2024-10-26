@@ -19,6 +19,7 @@ internal unsafe struct NativeCompilationInput
     public byte* source_entrypoint;
 
     public int invert_y;
+    public int hlsl_functionality_1;
     public int default_version;
     public ShaderProfile default_profile;
     public int force_default_version_and_profile;
@@ -40,6 +41,7 @@ internal unsafe struct NativeCompilationInput
         nativeInput->target_language = input.targetLanguage;
         nativeInput->target_language_version = input.targetLanguageVersion;
         nativeInput->invert_y = input.invertY ? 1 : 0;
+        nativeInput->hlsl_functionality_1 = input.hlslFunctionality1 ? 1 : 0;
         nativeInput->default_version = input.defaultVersion;
         nativeInput->default_profile = input.defaultProfile;
         nativeInput->force_default_version_and_profile = input.forceDefaultVersionAndProfile ? 1 : 0;

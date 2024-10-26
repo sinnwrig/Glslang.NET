@@ -64,6 +64,11 @@ public struct CompilationInput
     public bool invertY;
 
     /// <summary>
+    /// Enable additional HLSL functionality in the SPIR-V output.
+    /// </summary>
+    public bool hlslFunctionality1;
+
+    /// <summary>
     /// The default GLSL version to use if no `#version` is specified
     /// </summary>
     public int defaultVersion;

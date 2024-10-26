@@ -10,7 +10,7 @@
 
     <PropertyGroup>
         <PackageId>Glslang.NET</PackageId>
-        <Version>1.1.2</Version>
+        <Version>1.1.3</Version>
         
         <Authors>Kai Angulo</Authors>
         <Owners>Kai Angulo</Owners>
