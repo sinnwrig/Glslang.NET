@@ -20,43 +20,32 @@ public static unsafe class Example
         CompilationInput input = new CompilationInput()
         {
             language = SourceType.HLSL,
-            stage = ShaderStage.Fragment,
+            stage = ShaderStage.Vertex,
             client = ClientType.Vulkan,
             clientVersion = TargetClientVersion.Vulkan_1_3,
             targetLanguage = TargetLanguage.SPV,
             targetLanguageVersion = TargetLanguageVersion.SPV_1_5,
             code = ShaderCode.HlslCode,
-            sourceEntrypoint = "pixel",
+            sourceEntrypoint = "vertex",
             defaultVersion = 100,
             defaultProfile = ShaderProfile.None,
             forceDefaultVersionAndProfile = false,
             forwardCompatible = false,
             fileIncluder = IncludeFunction,
-            messages = MessageType.Default,
-            invertY = false,
+            messages = MessageType.Enhanced | MessageType.ReadHlsl | MessageType.HlslLegalization,
         };
 
-        Console.WriteLine("Creating shader");
+        Shader shader = new Shader(input);
 
-        using Shader shader = new Shader(input);
-
-        Console.WriteLine("Created shader");
+        shader.SetOptions(ShaderOptions.AutoMapBindings | ShaderOptions.AutoMapLocations | ShaderOptions.MapUnusedUniforms | ShaderOptions.UseHLSLIOMapper);
 
         if (!shader.Preprocess())
         {
             Console.WriteLine("HLSL preprocessing failed");
             Console.WriteLine(shader.GetInfoLog());
             Console.WriteLine(shader.GetDebugLog());
-            Console.WriteLine(ShaderCode.HlslCode);
             return;
         }
-
-
-        Console.WriteLine("Preprocess info logs:");
-        Console.WriteLine(shader.GetInfoLog());
-
-        Console.WriteLine("Preprocess debug logs:");
-        Console.WriteLine(shader.GetDebugLog());
 
         if (!shader.Parse())
         {
@@ -67,29 +56,43 @@ public static unsafe class Example
             return;
         }
 
-        Console.WriteLine("Parse info logs:");
-        Console.WriteLine(shader.GetInfoLog());
 
-        Console.WriteLine("Parse debug logs:");
-        Console.WriteLine(shader.GetDebugLog());
+        input.stage = ShaderStage.Fragment;
+        input.sourceEntrypoint = "pixel";
+        Shader shader2 = new Shader(input);
+
+        shader2.SetOptions(ShaderOptions.AutoMapBindings | ShaderOptions.AutoMapLocations | ShaderOptions.MapUnusedUniforms | ShaderOptions.UseHLSLIOMapper);
+
+        if (!shader2.Preprocess())
+        {
+            Console.WriteLine("HLSL preprocessing failed");
+            Console.WriteLine(shader2.GetInfoLog());
+            Console.WriteLine(shader2.GetDebugLog());
+            return;
+        }
+
+        if (!shader2.Parse())
+        {
+            Console.WriteLine("HLSL parsing failed");
+            Console.WriteLine(shader2.GetInfoLog());
+            Console.WriteLine(shader2.GetDebugLog());
+            Console.WriteLine(shader2.GetPreprocessedCode());
+            return;
+        }
+
 
         using Program program = new Program();
 
         program.AddShader(shader);
+        program.AddShader(shader2);
 
-        if (!program.Link(MessageType.SPVRules | MessageType.VulkanRules))
+        if (!program.Link(MessageType.SpvRules | MessageType.VulkanRules | MessageType.ReadHlsl))
         {
             Console.WriteLine("HLSL linking failed");
             Console.WriteLine(program.GetInfoLog());
             Console.WriteLine(program.GetDebugLog());
             return;
         }
-
-        Console.WriteLine("Program link info log:");
-        Console.WriteLine(program.GetInfoLog());
-
-        Console.WriteLine("Program link debug log:");
-        Console.WriteLine(program.GetDebugLog());
 
         program.GenerateSPIRV(out uint[] words, input.stage);
 
