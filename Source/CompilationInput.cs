@@ -59,11 +59,6 @@ public struct CompilationInput
     public string? sourceEntrypoint;
 
     /// <summary>
-    /// Invert the vertex shader's Y coordinate.
-    /// </summary>
-    public bool invertY;
-
-    /// <summary>
     /// Enable additional HLSL functionality in the SPIR-V output.
     /// </summary>
     public bool hlslFunctionality1;

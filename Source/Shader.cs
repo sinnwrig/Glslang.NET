@@ -101,6 +101,8 @@ public unsafe class Shader : SafeHandle
     /// </summary>
     public void SetDefaultUniformBlockName(string name)
     {
+        ArgumentNullException.ThrowIfNull(name);
+
         GlslangNative.SetDefaultUniformBlockName(ShaderPtr, name);
     }
 
@@ -137,6 +139,8 @@ public unsafe class Shader : SafeHandle
     /// </summary>
     public void SetPreamble(string preamble)
     {
+        ArgumentNullException.ThrowIfNull(preamble);
+
         _preamble = new Utf8String(preamble, true);
         GlslangNative.SetShaderPreamble(ShaderPtr, _preamble.Bytes);
     }
@@ -147,6 +151,8 @@ public unsafe class Shader : SafeHandle
     /// </summary>
     public void SetPreprocessedShaderCode(string code)
     {
+        ArgumentNullException.ThrowIfNull(code);
+
         GlslangNative.SetPreprocessedShaderCode(ShaderPtr, code);
     }
 
@@ -166,6 +172,30 @@ public unsafe class Shader : SafeHandle
     public void ShiftBindingForSet(ResourceType resourceType, uint shiftBase, uint set)
     {
         GlslangNative.ShiftShaderBindingForSet(ShaderPtr, resourceType, shiftBase, set);
+    }
+
+
+    /// <summary>
+    /// Set the source file of this <see cref="Shader"/> 
+    /// </summary>
+    public void SetSourceFile(string file)
+    {
+        ArgumentNullException.ThrowIfNull(file);
+
+        GlslangNative.SetShaderSourceFile(ShaderPtr, file);
+    }
+
+
+    /// <summary>
+    /// Add source text to this <see cref="Shader"/>
+    /// </summary>
+    public void AddSourceText(string text)
+    {
+        ArgumentNullException.ThrowIfNull(text);
+
+        byte* utf8String = NativeUtil.AllocateUTF8Ptr(text, out uint len, false);
+        GlslangNative.AddShaderSourceText(ShaderPtr, utf8String, len);
+        GlslangNative.Free(utf8String);
     }
 }
 

@@ -262,59 +262,104 @@ public enum TextureSamplerTransformMode : int
 [Flags]
 public enum MessageType : int
 {
-    /// <summary></summary>
-    Default = 0,
-
-    /// <summary></summary>
+    /// <summary>
+    /// give all required errors and extra warnings
+    /// </summary>
+    Default = 0 << 0,
+    /// <summary>
+    /// be liberal in accepting input
+    /// </summary>
     RelaxedErrors = 1 << 0,
 
-    /// <summary></summary>
+    /// <summary>
+    /// suppress all warnings, except those required by the specification
+    /// </summary>
     SuppressWarnings = 1 << 1,
 
-    /// <summary></summary>
+    /// <summary>
+    /// print the AST intermediate representation
+    /// </summary>
     AST = 1 << 2,
 
-    /// <summary></summary>
-    SPVRules = 1 << 3,
+    /// <summary>
+    /// issue messages for SPIR-V generation
+    /// </summary>
+    SpvRules = 1 << 3,
 
-    /// <summary></summary>
+    /// <summary>
+    /// issue messages for Vulkan-requirements of GLSL for SPIR-V
+    /// </summary>
     VulkanRules = 1 << 4,
 
-    /// <summary></summary>
+    /// <summary>
+    /// only print out errors produced by the preprocessor
+    /// </summary>
     OnlyPreprocessor = 1 << 5,
 
-    /// <summary></summary>
-    ReadHLSL = 1 << 6,
+    /// <summary>
+    /// use HLSL parsing rules and semantics
+    /// </summary>
+    ReadHlsl = 1 << 6,
 
-    /// <summary></summary>
+    /// <summary>
+    /// get cascading errors; risks error-recovery issues, instead of an early exit
+    /// </summary>
     CascadingErrors = 1 << 7,
 
-    /// <summary></summary>
+    /// <summary>
+    /// for testing, don't eliminate uncalled functions
+    /// </summary>
     KeepUncalled = 1 << 8,
 
-    /// <summary></summary>
-    HLSLOffsets = 1 << 9,
+    /// <summary>
+    /// allow block offsets to follow HLSL rules instead of GLSL rules
+    /// </summary>
+    HlslOffsets = 1 << 9,
 
-    /// <summary></summary>
+    /// <summary>
+    /// save debug information
+    /// </summary>
     DebugInfo = 1 << 10,
 
-    /// <summary></summary>
-    Enable16BitHLSLTypes = 1 << 11,
+    /// <summary>
+    /// enable use of 16-bit types in SPIR-V for HLSL
+    /// </summary>
+    HlslEnable16BitTypes = 1 << 11,
 
-    /// <summary></summary>
-    LegalizeHLSL = 1 << 12,
+    /// <summary>
+    /// enable HLSL Legalization messages
+    /// </summary>
+    HlslLegalization = 1 << 12,
 
-    /// <summary></summary>
-    DX9CompatibleHLSL = 1 << 13,
+    /// <summary>
+    /// enable HLSL DX9 compatible mode (for samplers and semantics)
+    /// </summary>
+    HlslDX9Compatible = 1 << 13,
 
-    /// <summary></summary>
+    /// <summary>
+    /// print the builtin symbol table
+    /// </summary>
     BuiltinSymbolTable = 1 << 14,
 
-    /// <summary></summary>
+    /// <summary>
+    /// enhanced message readability
+    /// </summary>
     Enhanced = 1 << 15,
 
-    /// <summary></summary>
+    /// <summary>
+    /// Output Absolute path for messages
+    /// </summary>
     AbsolutePath = 1 << 16,
+
+    /// <summary>
+    /// Display error message column aswell as line
+    /// </summary>
+    DisplayErrorColumn = 1 << 17,
+
+    /// <summary>
+    /// perform cross-stage optimizations during linking
+    /// </summary>
+    LinkTimeOptimization = 1 << 18,
 }
 
 
@@ -380,14 +425,40 @@ public enum ShaderOptions : int
     /// <summary></summary>
     Default = 0,
 
-    /// <summary></summary>
+    /// <summary>
+    /// Automatically map uniforms with undefined bindings.
+    /// </summary>
     AutoMapBindings = 1 << 0,
 
-    /// <summary></summary>
+    /// <summary>
+    /// Automatically map I/O variables with undefined locations.
+    /// </summary>
     AutoMapLocations = 1 << 1,
 
-    /// <summary></summary>
+    /// <summary>
+    /// Relax vulkan validation rules when generating Vulkan-conformant SPIR-V.
+    /// </summary>
     VulkanRulesRelaxed = 1 << 2,
+
+    /// <summary>
+    /// Invert the Y output of the vertex stage to accomodate other API coordiante systems. 
+    /// </summary>
+    InvertY = 1 << 3,
+
+    /// <summary>
+    /// Include unused uniforms when automatically mapping undefined bindings. 
+    /// </summary>
+    MapUnusedUniforms = 1 << 4,
+
+    /// <summary>
+    /// Use the HLSL IO mapper when auto-mapping bindings and locations.
+    /// </summary>
+    UseHLSLIOMapper = 1 << 5,
+
+    /// <summary>
+    /// Flatten HLSL uniform arrays.
+    /// </summary>
+    FlattenUniformArrays = 1 << 6,
 }
 
 

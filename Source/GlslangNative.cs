@@ -142,6 +142,13 @@ internal static partial class GlslangNative
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal unsafe static partial void ShiftShaderBindingForSet(NativeShader* shader, ResourceType res, uint shiftBase, uint set);
 
+    [LibraryImport(LibName, EntryPoint = "glslang_shader_add_source_text")]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal unsafe static partial void AddShaderSourceText(NativeShader* shader, byte* text, nuint len);
+
+    [LibraryImport(LibName, EntryPoint = "glslang_shader_set_source_file", StringMarshalling = StringMarshalling.Utf8)]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal unsafe static partial void SetShaderSourceFile(NativeShader* shader, string file);
 
 
     [LibraryImport(LibName, EntryPoint = "glslang_program_add_source_text")]
