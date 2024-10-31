@@ -17,7 +17,7 @@ To support cross-platform compilation and to simplify the native build process, 
 To build native libraries, run the `BuildNative.cs` file inside the _Native_ folder, specicying your target architecture [x64, arm64, all] with -A and your target platform [windows, linux, macos, all] with -P.
  
 Native build requirements:
-- Zig compiler version 0.14.0-dev.1862+c96f9a017 present on your `PATH`. You can get the compiler from [Zig's download page](https://ziglang.org/download/) or [from a package manager](https://github.com/ziglang/zig/wiki/Install-Zig-from-a-Package-Manager)
+-Zig compiler version present on your `PATH` of at least version 0.14.0+. You can get the compiler from [Zig's download page](https://ziglang.org/download/) or [from a package manager](https://github.com/ziglang/zig/wiki/Install-Zig-from-a-Package-Manager)
  
 Pre-built binaries are bundled in the NuGet package for the following operating systems:
 - Windows x64
