@@ -28,8 +28,8 @@
     </PropertyGroup>
 
     <PropertyGroup>
-        <WindowsX64BinPath>..\Native\lib\windows-x64\bin\*.dll</WindowsX64BinPath>
-        <WindowsArm64BinPath>..\Native\lib\windows-arm64\bin\*.dll</WindowsArm64BinPath>
+        <WindowsX64LibPath>..\Native\lib\windows-x64\bin\*.dll</WindowsX64LibPath>
+        <WindowsArm64LibPath>..\Native\lib\windows-arm64\bin\*.dll</WindowsArm64LibPath>
         <LinuxX64LibPath>..\Native\lib\linux-x64\lib\*.so</LinuxX64LibPath>
         <LinuxArm64LibPath>..\Native\lib\linux-arm64\lib\*.so</LinuxArm64LibPath>
         <MacosX64LibPath>..\Native\lib\macos-x64\lib\*.dylib</MacosX64LibPath>
